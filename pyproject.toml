@@ -1,0 +1,29 @@
+[project]
+name = "vigil"
+version = "0.0.1"
+description = "Video scene understanding and reporting."
+authors = [
+    {name="Baptiste Bouillon", email="1bouillonbaptiste@gmail.com"},
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+
+[tool.poetry.dependencies]
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = ">=1.15.0,<2"
+pre-commit = ">=4.2,<5"
+pytest = ">=8.3,<9"
+pytest-cases = ">=3.8,<4"
+pytest-cov = ">=6.1,<7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.coverage.run]
+omit = ["tests/*"]
