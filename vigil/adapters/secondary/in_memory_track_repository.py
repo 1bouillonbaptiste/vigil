@@ -15,3 +15,11 @@ class InMemoryTrackRepository(TrackRepository):
         if track_id not in self._tracks:
             raise KeyError(f"Track with ID {track_id} not found.")
         return self._tracks[track_id]
+
+    def list_video_tracks(self, video_id: UUID) -> list[Track]:
+        """Retrieves a list of tracks for a video."""
+        tracks: list[Track] = []
+        for track in self._tracks.values():
+            if track.video_id == video_id:
+                tracks.append(track)
+        return tracks

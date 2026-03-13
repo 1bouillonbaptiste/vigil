@@ -7,6 +7,6 @@ class TrackObjectsUseCase:
     def __init__(self):
         pass
 
-    def execute(self, track_id: UUID) -> None:
+    def execute(self, video_id: UUID) -> None:
         """Execute the use case on a video."""
         pass

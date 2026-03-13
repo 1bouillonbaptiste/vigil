@@ -7,3 +7,7 @@ class Track:
     """Represent a track."""
 
     id: UUID
+    """Identifier of the track."""
+
+    video_id: UUID
+    """Identifier of the video where the track comes from."""
