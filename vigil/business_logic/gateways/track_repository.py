@@ -10,3 +10,7 @@ class TrackRepository(Protocol):
     def get_by_id(self, track_id: UUID) -> Track:
         """Retrieve a track by its `track_id`."""
         ...
+
+    def save(self, track: Track) -> None:
+        """Save a track to the repository."""
+        ...

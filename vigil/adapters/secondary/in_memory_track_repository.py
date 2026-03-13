@@ -16,6 +16,10 @@ class InMemoryTrackRepository(TrackRepository):
             raise KeyError(f"Track with ID {track_id} not found.")
         return self._tracks[track_id]
 
+    def save(self, track: Track) -> None:
+        """Save a track to the repository."""
+        self._tracks[track.video_id] = track
+
     def list_video_tracks(self, video_id: UUID) -> list[Track]:
         """Retrieves a list of tracks for a video."""
         tracks: list[Track] = []
