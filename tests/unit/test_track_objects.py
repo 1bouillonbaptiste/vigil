@@ -1,4 +1,7 @@
+from dataclasses import dataclass
 from uuid import UUID
+
+import pytest
 
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
@@ -6,7 +9,7 @@ from vigil.business_logic.models.track import Track
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 
-class FakeTracker(Tracker):
+class StubTracker(Tracker):
     """Implement a fake tracker for testing purpose."""
 
     def __init__(self):
@@ -21,16 +24,33 @@ class FakeTracker(Tracker):
         self._tracks.append(track)
 
 
-def test_should_remove_track_with_fewer_than_5_detections():
-    # Given
-    tracker = FakeTracker()
+@dataclass
+class ThisContext:
+    """Testing context for `TrackObjectsUseCase`."""
+
+    tracker: StubTracker
+    track_repository: InMemoryTrackRepository
+    use_case: TrackObjectsUseCase
+
+
+@pytest.fixture
+def this_context() -> ThisContext:
+    tracker = StubTracker()
     track_repository = InMemoryTrackRepository()
     use_case = TrackObjectsUseCase(
-        track_repository=track_repository,
         tracker=tracker,
+        track_repository=track_repository,
+    )
+    return ThisContext(
+        tracker=tracker,
+        track_repository=track_repository,
+        use_case=use_case,
     )
 
-    tracker.add(
+
+def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisContext):
+    # Given
+    this_context.tracker.add(
         Track(
             id=UUID("5c22ec7e-f7e8-4488-b295-ea90bfca7b58"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
@@ -44,22 +64,15 @@ def test_should_remove_track_with_fewer_than_5_detections():
     )
 
     # When
-    use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
     # Then
-    assert track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")) == []
+    assert this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")) == []
 
 
-def test_should_track_an_object_appearing_more_than_5_times():
+def test_should_track_an_object_appearing_more_than_5_times_included(this_context: ThisContext):
     # Given
-    tracker = FakeTracker()
-    track_repository = InMemoryTrackRepository()
-    use_case = TrackObjectsUseCase(
-        track_repository=track_repository,
-        tracker=tracker,
-    )
-
-    tracker.add(
+    this_context.tracker.add(
         Track(
             id=UUID("5c22ec7e-f7e8-4488-b295-ea90bfca7b58"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
@@ -74,10 +87,10 @@ def test_should_track_an_object_appearing_more_than_5_times():
     )
 
     # When
-    use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
     # Then
-    assert track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")) == [
+    assert this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")) == [
         Track(
             id=UUID("5c22ec7e-f7e8-4488-b295-ea90bfca7b58"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
