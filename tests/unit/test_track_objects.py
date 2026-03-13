@@ -64,7 +64,7 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
     )
 
     # When
-    this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    this_context.use_case.execute()
 
     # Then
     assert this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")) == []
@@ -87,7 +87,7 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
     )
 
     # When
-    this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    this_context.use_case.execute()
 
     # Then
     assert this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")) == [

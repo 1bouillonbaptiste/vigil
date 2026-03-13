@@ -1,4 +1,3 @@
-from uuid import UUID
 
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
@@ -11,7 +10,7 @@ class TrackObjectsUseCase:
         self._tracker = tracker
         self._tracks_repository = track_repository
 
-    def execute(self, video_id: UUID) -> None:
+    def execute(self) -> None:
         """Execute the use case on a video."""
         tracks = self._tracker.track()
         for track in tracks:
