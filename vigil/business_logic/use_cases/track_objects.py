@@ -1,4 +1,3 @@
-
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 
