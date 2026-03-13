@@ -8,7 +8,7 @@ setup: # setup the environment with poetry
 check: # run quality checks
 	poetry check --lock
 	poetry run pre-commit run -a
-	poetry run mypy --check ptahlmud/ tests/
+	poetry run mypy --check vigil/ tests/
 
 test: # test the code with pytest
 	poetry run pytest --cov --cov-config=pyproject.toml --cov-report=html tests/
