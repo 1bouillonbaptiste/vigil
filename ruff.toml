@@ -13,7 +13,9 @@ select = [
     "RUF", # specific ruff rules
 ]
 ignore = [
-    "D107", # issing docstring in `__init__`
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D107",  # Missing docstring in classes `__init__`
 ]
 
 [lint.per-file-ignores]
