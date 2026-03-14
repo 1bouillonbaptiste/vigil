@@ -5,27 +5,11 @@ import pytest
 
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
-from vigil.business_logic.gateways.tracker import Tracker
-from vigil.business_logic.models.detection import BoundingBox, Detection
+from vigil.adapters.secondary.iou_tracker import IouTracker
+from vigil.business_logic.models.detection import BoundingBox
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 from tests.helpers import DetectionFactory
-
-
-class FakeTracker(Tracker):
-    """Fake tracker for testing purpose.
-
-    This fake creates a single track given detections.
-    Raises an error if several detections appear in the same frame.
-    """
-
-    def track(self, detections: list[Detection]) -> list[list[Detection]]:
-        """Return the saved tracks."""
-        tracked_frames: list[int] = [detection.frame_index for detection in detections]
-        if len(tracked_frames) != len(set(tracked_frames)):
-            raise RuntimeError("Found multiple detections in the same frame, not yet supported.")
-
-        return [sorted(detections, key=lambda d: d.frame_index)]
 
 
 @dataclass
@@ -33,7 +17,7 @@ class ThisContext:
     """Testing context for `TrackObjectsUseCase`."""
 
     detection_repository: InMemoryDetectionRepository
-    tracker: FakeTracker
+    tracker: IouTracker
     track_repository: InMemoryTrackRepository
     use_case: TrackObjectsUseCase
 
@@ -41,7 +25,7 @@ class ThisContext:
 @pytest.fixture
 def this_context() -> ThisContext:
     detection_repository = InMemoryDetectionRepository()
-    tracker = FakeTracker()
+    tracker = IouTracker()
     track_repository = InMemoryTrackRepository()
     use_case = TrackObjectsUseCase(
         detection_repository=detection_repository,
@@ -76,6 +60,13 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
     factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     this_context.detection_repository.add(factory.create())
     this_context.detection_repository.add(factory.create())
+    this_context.detection_repository.add(factory.create())
+    this_context.detection_repository.add(factory.create())
+    this_context.detection_repository.add(factory.create())
+
+    factory = DetectionFactory(  # Invalid track with 3 detections
+        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=8
+    )
     this_context.detection_repository.add(factory.create())
     this_context.detection_repository.add(factory.create())
     this_context.detection_repository.add(factory.create())
@@ -116,7 +107,9 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
     this_context.detection_repository.add(factory.create())
     best_detection = factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25), confidence=1)
     this_context.detection_repository.add(best_detection)
-    this_context.detection_repository.add(factory.create())
+    this_context.detection_repository.add(
+        factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25), confidence=0.99)
+    )
     this_context.detection_repository.add(factory.create())
 
     # When
