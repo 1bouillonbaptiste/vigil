@@ -1,4 +1,3 @@
-from dataclasses import replace
 from uuid import UUID
 
 from pytest_cases import parametrize_with_cases
@@ -34,7 +33,9 @@ class TestIouTrackerCases:
         """The tracker consider two tracks on gap."""
         factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
         detection = factory.create()
-        other = replace(detection, bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30))
+
+        other_factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=0)
+        other = other_factory.create(bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30))
 
         return [detection, other], [[detection], [other]]
 
@@ -85,3 +86,30 @@ def test_can_track_detections_across_frames(detections: list[Detection], expecte
     assert len(aggregates) == len(expected_aggregates)
     for aggregate, expected in zip(aggregates, expected_aggregates, strict=False):
         assert aggregate == expected
+
+
+def test_should_split_tracks_when_iou_is_below_min_iou():
+    # IoU between these two boxes ≈ 0.43
+    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    detection1 = factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30))
+    detection2 = factory.create(bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30))
+
+    tracker = IouTracker(min_iou=0.5)
+    tracks = tracker.track([detection1, detection2])
+
+    assert len(tracks) == 2
+    assert tracks[0] == [detection1]
+    assert tracks[1] == [detection2]
+
+
+def test_should_keep_track_when_iou_is_above_min_iou():
+    # IoU between these two boxes ≈ 0.43
+    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    detection1 = factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30))
+    detection2 = factory.create(bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30))
+
+    tracker = IouTracker(min_iou=0.4)
+    tracks = tracker.track([detection1, detection2])
+
+    assert len(tracks) == 1
+    assert tracks[0] == [detection1, detection2]

@@ -25,7 +25,7 @@ class IouTracker(Tracker):
                 current_track = [remaining_detections.pop(0)]
                 continue
             best_match = max(next_frame_detections, key=lambda other: self._distance(current_track[-1], other))
-            if self._distance(current_track[-1], best_match) <= 0:
+            if self._distance(current_track[-1], best_match) <= self.min_iou:
                 tracks.append(current_track)
                 current_track = [remaining_detections.pop(0)]
                 continue
