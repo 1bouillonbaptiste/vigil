@@ -15,6 +15,9 @@ class Track:
     detections: list[UUID]
     """Identifiers of the detections tracked by the object."""
 
+    thumbnail_id: UUID
+    """Identifier of the most representative detection in the track."""
+
     def is_valid(self) -> bool:
         """Check if the track has enough detections to be tracked."""
         return len(self.detections) > 4
