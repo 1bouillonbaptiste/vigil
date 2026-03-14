@@ -21,6 +21,8 @@ class TrackObjectsUseCase:
         detections = self._detection_repository.get_by_video_id(video_id)
         instances = self._tracker.track(detections)
         for instance_detections in instances:
+            if not instance_detections:
+                continue
             new_track = Track(
                 id=uuid.uuid4(),
                 video_id=video_id,

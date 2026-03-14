@@ -180,3 +180,14 @@ def test_should_not_track_detections_from_wrong_video(this_context: ThisContext)
         video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b")
     )
     assert len(second_tracks) == 1
+
+
+def test_should_not_track_on_empty_detections(this_context: ThisContext):
+    # Given
+
+    # When
+    this_context.use_case.execute(video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))
+
+    # Then
+    tracks = this_context.track_repository.list_video_tracks(video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))
+    assert len(tracks) == 0
