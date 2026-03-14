@@ -219,3 +219,60 @@ def test_should_select_largest_detection_as_best_on_same_confidence(this_context
     tracks = this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     assert len(tracks) == 1
     assert tracks[0].thumbnail_id == UUID("6380d673-457d-476c-9682-c6fbbfffdea4")
+
+
+def test_should_select_highest_score_as_best(this_context: ThisContext):
+    # Given
+    this_context.detection_repository.add(
+        Detection(
+            id=UUID("71a33805-2772-40b2-a1ca-b2ba66927603"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=0,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=0.5,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            id=UUID("6380d673-457d-476c-9682-c6fbbfffdea4"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=1,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=0.5,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            id=UUID("657f849a-a00a-41d2-b8df-7deb8ab00475"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=2,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=20),  # smaller bbox but higher confidence
+            confidence=1,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            id=UUID("f15b4db3-43fa-42c0-a453-7f66829d044e"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=3,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=0.5,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            id=UUID("2dfc4687-e126-4501-af0f-bdacbd5f0116"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=4,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=0.5,
+        )
+    )
+
+    # When
+    this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+
+    # Then
+    tracks = this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    assert len(tracks) == 1
+    assert tracks[0].thumbnail_id == UUID("657f849a-a00a-41d2-b8df-7deb8ab00475")
