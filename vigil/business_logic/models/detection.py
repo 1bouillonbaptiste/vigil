@@ -25,7 +25,7 @@ class BoundingBox:
 class Detection:
     """Represent an instance detection object."""
 
-    detection_id: UUID
+    id: UUID
     """Identifier of the detection."""
 
     video_id: UUID

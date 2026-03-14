@@ -24,8 +24,8 @@ class TrackObjectsUseCase:
             new_track = Track(
                 id=uuid.uuid4(),
                 video_id=video_id,
-                detections=[detection.detection_id for detection in instance_detections],
-                thumbnail_id=_get_most_representative(instance_detections).detection_id,
+                detections=[detection.id for detection in instance_detections],
+                thumbnail_id=_get_most_representative(instance_detections).id,
             )
             if new_track.is_valid():
                 self._tracks_repository.save(new_track)
