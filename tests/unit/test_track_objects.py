@@ -6,7 +6,7 @@ import pytest
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
-from vigil.business_logic.models.detection import Detection
+from vigil.business_logic.models.detection import BoundingBox, Detection
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 
@@ -61,6 +61,8 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
             detection_id=UUID("71a33805-2772-40b2-a1ca-b2ba66927603"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=0,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -68,6 +70,8 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
             detection_id=UUID("6380d673-457d-476c-9682-c6fbbfffdea4"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=1,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -75,6 +79,8 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
             detection_id=UUID("657f849a-a00a-41d2-b8df-7deb8ab00475"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=2,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -82,6 +88,8 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
             detection_id=UUID("f15b4db3-43fa-42c0-a453-7f66829d044e"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=3,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
 
@@ -99,6 +107,8 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
             detection_id=UUID("71a33805-2772-40b2-a1ca-b2ba66927603"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=0,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -106,6 +116,8 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
             detection_id=UUID("6380d673-457d-476c-9682-c6fbbfffdea4"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=1,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -113,6 +125,8 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
             detection_id=UUID("657f849a-a00a-41d2-b8df-7deb8ab00475"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=2,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -120,6 +134,8 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
             detection_id=UUID("f15b4db3-43fa-42c0-a453-7f66829d044e"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=3,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
     this_context.detection_repository.add(
@@ -127,6 +143,8 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
             detection_id=UUID("2dfc4687-e126-4501-af0f-bdacbd5f0116"),
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
             frame_index=4,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),
+            confidence=1,
         )
     )
 
@@ -144,3 +162,60 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
         UUID("f15b4db3-43fa-42c0-a453-7f66829d044e"),
         UUID("2dfc4687-e126-4501-af0f-bdacbd5f0116"),
     ]
+
+
+def test_should_select_largest_detection_as_best_on_same_confidence(this_context: ThisContext):
+    # Given
+    this_context.detection_repository.add(
+        Detection(
+            detection_id=UUID("71a33805-2772-40b2-a1ca-b2ba66927603"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=0,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=1,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            detection_id=UUID("6380d673-457d-476c-9682-c6fbbfffdea4"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=1,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30),  # largest bbox
+            confidence=1,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            detection_id=UUID("657f849a-a00a-41d2-b8df-7deb8ab00475"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=2,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=1,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            detection_id=UUID("f15b4db3-43fa-42c0-a453-7f66829d044e"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=3,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=1,
+        )
+    )
+    this_context.detection_repository.add(
+        Detection(
+            detection_id=UUID("2dfc4687-e126-4501-af0f-bdacbd5f0116"),
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+            frame_index=4,
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25),
+            confidence=1,
+        )
+    )
+
+    # When
+    this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+
+    # Then
+    tracks = this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    assert len(tracks) == 1
+    assert tracks[0].thumbnail_id == UUID("6380d673-457d-476c-9682-c6fbbfffdea4")
