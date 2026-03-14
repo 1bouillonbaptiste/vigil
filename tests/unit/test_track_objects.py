@@ -149,3 +149,34 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
     tracks = this_context.track_repository.list_video_tracks(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     assert len(tracks) == 1
     assert tracks[0].thumbnail_id == best_detection.id
+
+
+def test_should_not_track_detections_from_wrong_video(this_context: ThisContext):
+    # Given
+    first_factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    this_context.detection_repository.add(first_factory.create())
+    this_context.detection_repository.add(first_factory.create())
+    this_context.detection_repository.add(first_factory.create())
+    this_context.detection_repository.add(first_factory.create())
+    this_context.detection_repository.add(first_factory.create())
+
+    second_factory = DetectionFactory(video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))
+    this_context.detection_repository.add(second_factory.create())
+    this_context.detection_repository.add(second_factory.create())
+    this_context.detection_repository.add(second_factory.create())
+    this_context.detection_repository.add(second_factory.create())
+    this_context.detection_repository.add(second_factory.create())
+
+    # When
+    this_context.use_case.execute(video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))
+
+    # Then
+    first_tracks = this_context.track_repository.list_video_tracks(
+        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")
+    )
+    assert len(first_tracks) == 0
+
+    second_tracks = this_context.track_repository.list_video_tracks(
+        video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b")
+    )
+    assert len(second_tracks) == 1
