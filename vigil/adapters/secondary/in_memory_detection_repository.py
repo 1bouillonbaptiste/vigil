@@ -18,6 +18,6 @@ class InMemoryDetectionRepository(DetectionRepository):
                 detections.append(detection)
         return detections
 
-    def add(self, detection: Detection) -> None:
+    def save(self, detection: Detection) -> None:
         """Add a detection to the detection repository."""
         self._detections.append(detection)
