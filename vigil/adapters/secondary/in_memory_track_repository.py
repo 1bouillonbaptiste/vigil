@@ -18,7 +18,7 @@ class InMemoryTrackRepository(TrackRepository):
 
     def save(self, track: Track) -> None:
         """Save a track to the repository."""
-        self._tracks[track.video_id] = track
+        self._tracks[track.id] = track
 
     def list_video_tracks(self, video_id: UUID) -> list[Track]:
         """Retrieves a list of tracks for a video."""
