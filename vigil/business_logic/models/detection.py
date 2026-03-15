@@ -3,7 +3,6 @@ from enum import StrEnum
 from uuid import UUID
 
 
-@dataclass(frozen=True)
 class ClassLabel(StrEnum):
     """Supported classes labels."""
 

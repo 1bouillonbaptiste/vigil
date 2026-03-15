@@ -107,5 +107,5 @@ def test_should_detect_on_frame(
         video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")
     )
     assert len(detections) == len(expected_detections)
-    for detection, expected in zip(detections, expected_detections, strict=False):
+    for detection, expected in zip(detections, expected_detections, strict=True):
         assert detection == replace(expected, id=detection.id)
