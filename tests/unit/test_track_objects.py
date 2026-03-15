@@ -113,7 +113,7 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
     this_context.detection_repository.save(best_detection)
     this_context.detection_repository.save(
         factory.create(
-            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label=ClassLabel.PEOPLE)
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=0.99, label=ClassLabel.PEOPLE)
         )
     )
     this_context.detection_repository.save(factory.create())
