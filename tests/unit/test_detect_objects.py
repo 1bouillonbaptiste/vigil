@@ -19,19 +19,14 @@ class StubDetectionModel(DetectionModel):
     """
 
     def __init__(self) -> None:
-        self._detections: dict[UUID, list[Detection]] = {
+        self._detections: dict[UUID, list[BoundingBox]] = {
             UUID("8d672f18-906e-4ff9-a06d-938898683720"): [],
             UUID("8d672f18-906e-4ff9-a06d-938898683721"): [
-                Detection(
-                    id=uuid4(),  # will be replaced
-                    video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-                    frame_position=1,
-                    bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people"),
-                )
+                BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people")
             ],
         }
 
-    def detect(self, frame: VideoFrame) -> list[Detection]:
+    def detect(self, frame: VideoFrame) -> list[BoundingBox]:
         """Return the detections associated to a frame id."""
         return self._detections[frame.id]
 

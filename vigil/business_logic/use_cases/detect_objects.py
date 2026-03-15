@@ -1,8 +1,10 @@
+import uuid
 from uuid import UUID
 
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.gateways.detection_repository import DetectionRepository
 from vigil.business_logic.gateways.frame_repository import FrameRepository
+from vigil.business_logic.models.detection import Detection
 
 
 class DetectObjectsUseCase:
@@ -21,6 +23,13 @@ class DetectObjectsUseCase:
     def execute(self, frame_id: UUID):
         """Execute the use case on a single frame."""
         frame = self._frame_repository.get_by_id(frame_id)
-        detections = self._detection_model.detect(frame)
-        for detection in detections:
-            self._detection_repository.save(detection)
+        bboxes = self._detection_model.detect(frame)
+        for bbox in bboxes:
+            self._detection_repository.save(
+                Detection(
+                    id=uuid.uuid4(),
+                    video_id=frame.video_id,
+                    frame_position=frame.position,
+                    bbox=bbox,
+                )
+            )
