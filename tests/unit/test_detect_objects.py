@@ -4,7 +4,9 @@ from uuid import UUID
 import pytest
 
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
+from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.business_logic.models.detection import BoundingBox, Detection
+from vigil.business_logic.models.frame import VideoFrame
 from vigil.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 
 
@@ -12,22 +14,31 @@ from vigil.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 class ThisContext:
     """Context for testing `DetectObjectsUseCase`."""
 
+    frame_repository: InMemoryFrameRepository
     detection_repository: InMemoryDetectionRepository
     use_case: DetectObjectsUseCase
 
 
 @pytest.fixture
 def this_context() -> ThisContext:
+    frame_repository = InMemoryFrameRepository()
     detection_repository = InMemoryDetectionRepository()
-    use_case = DetectObjectsUseCase(detection_repository=detection_repository)
-    return ThisContext(detection_repository=detection_repository, use_case=use_case)
+    use_case = DetectObjectsUseCase(frame_repository=frame_repository, detection_repository=detection_repository)
+    return ThisContext(frame_repository=frame_repository, detection_repository=detection_repository, use_case=use_case)
 
 
 def test_should_detect_a_people(this_context: ThisContext):
     # Given
+    this_context.frame_repository.save(
+        VideoFrame(
+            id=UUID("8d672f18-906e-4ff9-a06d-938898683728"),
+            position=0,
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+        )
+    )
 
     # When
-    this_context.use_case.execute()
+    this_context.use_case.execute(frame_id=UUID("8d672f18-906e-4ff9-a06d-938898683728"))
 
     # Then
     detections = this_context.detection_repository.get_by_video_id(
