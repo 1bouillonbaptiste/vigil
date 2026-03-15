@@ -14,6 +14,10 @@ class BoundingBox:
     """Width of the bounding box, in pixels."""
     height: int
     """Height of the bounding box, in pixels."""
+    confidence: float
+    """Confidence score of the bounding box."""
+    label: str
+    """Class label of the bounding box."""
 
     @property
     def area(self) -> float:
@@ -49,9 +53,6 @@ class Detection:
     bbox: BoundingBox
     """Bounding box around the detection."""
 
-    confidence: float
-    """Confidence score of the detection."""
-
     def score(self) -> float:
         """Visibility score, the larger the area and the higher the confidence, the best."""
-        return self.confidence * self.bbox.area
+        return self.bbox.confidence * self.bbox.area

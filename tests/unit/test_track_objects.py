@@ -85,7 +85,9 @@ def test_should_select_largest_detection_as_best_on_same_confidence(this_context
     # Given
     factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     this_context.detection_repository.save(factory.create())
-    largest_detection = factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=35))
+    largest_detection = factory.create(
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=35, confidence=0.8, label="people")
+    )
     this_context.detection_repository.save(largest_detection)
     this_context.detection_repository.save(factory.create())
     this_context.detection_repository.save(factory.create())
@@ -105,10 +107,12 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
     factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     this_context.detection_repository.save(factory.create())
     this_context.detection_repository.save(factory.create())
-    best_detection = factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25), confidence=1)
+    best_detection = factory.create(
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label="people")
+    )
     this_context.detection_repository.save(best_detection)
     this_context.detection_repository.save(
-        factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25), confidence=0.99)
+        factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label="people"))
     )
     this_context.detection_repository.save(factory.create())
 

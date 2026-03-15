@@ -17,7 +17,6 @@ class DetectObjectsUseCase:
                 id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"),
                 video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
                 frame_index=0,
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
-                confidence=0.5,
+                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people"),
             )
         )

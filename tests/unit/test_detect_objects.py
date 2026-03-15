@@ -23,7 +23,7 @@ def this_context() -> ThisContext:
     return ThisContext(detection_repository=detection_repository, use_case=use_case)
 
 
-def test_should_detect_a_person(this_context: ThisContext):
+def test_should_detect_a_people(this_context: ThisContext):
     # Given
 
     # When
@@ -38,6 +38,5 @@ def test_should_detect_a_person(this_context: ThisContext):
         id=detections[0].id,
         video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
         frame_index=0,
-        bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
-        confidence=0.5,
+        bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people"),
     )
