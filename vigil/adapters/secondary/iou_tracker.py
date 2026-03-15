@@ -14,11 +14,11 @@ class IouTracker(Tracker):
             return [detections]
 
         tracks: list[list[Detection]] = []
-        remaining_detections: list[Detection] = sorted(detections, key=lambda d: d.frame_index)
+        remaining_detections: list[Detection] = sorted(detections, key=lambda d: d.frame_position)
         current_track: list[Detection] = [remaining_detections.pop(0)]
         while remaining_detections:
             next_frame_detections = self._find_detections_on_frame(
-                remaining_detections, current_track[-1].frame_index + 1
+                remaining_detections, current_track[-1].frame_position + 1
             )
             if not next_frame_detections:
                 tracks.append(current_track)
@@ -38,7 +38,7 @@ class IouTracker(Tracker):
     @staticmethod
     def _find_detections_on_frame(detections: list[Detection], frame_idx: int) -> list[Detection]:
         """Find all detections within a frame."""
-        return [detection for detection in detections if detection.frame_index == frame_idx]
+        return [detection for detection in detections if detection.frame_position == frame_idx]
 
     @staticmethod
     def _distance(detection1: Detection, detection2: Detection) -> float:

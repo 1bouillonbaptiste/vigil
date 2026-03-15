@@ -21,7 +21,7 @@ class DetectionFactory:
             id=uuid4(),
             video_id=self._video_id,
             bbox=bbox or self._default_bbox,
-            frame_index=self._frame_idx,
+            frame_position=self._frame_idx,
         )
         self._frame_idx += 1
         return detection

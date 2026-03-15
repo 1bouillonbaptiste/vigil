@@ -25,7 +25,7 @@ class StubDetectionModel(DetectionModel):
                 Detection(
                     id=uuid4(),  # will be replaced
                     video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-                    frame_index=1,
+                    frame_position=1,
                     bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people"),
                 )
             ],
@@ -78,7 +78,7 @@ class ShouldDetectOnFrameCases:
             Detection(
                 id=uuid4(),  # will be replaced
                 video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-                frame_index=1,
+                frame_position=1,
                 bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people"),
             )
         ]
