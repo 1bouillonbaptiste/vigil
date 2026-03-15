@@ -27,3 +27,7 @@ class InMemoryTrackRepository(TrackRepository):
             if track.video_id == video_id:
                 tracks.append(track)
         return tracks
+
+    def list_by_video_id(self, video_id: UUID) -> list[Track]:
+        """Retrieve all tracks associated to a video (protocol-compliant alias)."""
+        return self.list_video_tracks(video_id)

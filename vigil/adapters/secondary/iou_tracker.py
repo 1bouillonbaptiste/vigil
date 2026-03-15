@@ -2,6 +2,12 @@ from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.models.detection import Detection
 
 
+def _next_frame_index(detections: list[Detection], current_index: int) -> int | None:
+    """Return the smallest frame index greater than current_index, or None."""
+    candidates = [d.frame_index for d in detections if d.frame_index > current_index]
+    return min(candidates) if candidates else None
+
+
 class IouTracker(Tracker):
     """Implement a tracker with iou comparison across frames."""
 
@@ -17,9 +23,12 @@ class IouTracker(Tracker):
         remaining_detections: list[Detection] = sorted(detections, key=lambda d: d.frame_index)
         current_track: list[Detection] = [remaining_detections.pop(0)]
         while remaining_detections:
-            next_frame_detections = self._find_detections_on_frame(
-                remaining_detections, current_track[-1].frame_index + 1
-            )
+            next_frame_index = _next_frame_index(remaining_detections, current_track[-1].frame_index)
+            if next_frame_index is None:
+                tracks.append(current_track)
+                current_track = [remaining_detections.pop(0)]
+                continue
+            next_frame_detections = self._find_detections_on_frame(remaining_detections, next_frame_index)
             if not next_frame_detections:
                 tracks.append(current_track)
                 current_track = [remaining_detections.pop(0)]

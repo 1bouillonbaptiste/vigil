@@ -64,12 +64,15 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
     this_context.detection_repository.add(factory.create())
     this_context.detection_repository.add(factory.create())
 
+    # Second object is spatially distinct (non-overlapping bbox) so the IOU tracker
+    # does not link it to the first track. Only 3 detections → filtered as invalid.
+    other_bbox = BoundingBox(center_x=500, center_y=500, width=10, height=30)
     factory = DetectionFactory(  # Invalid track with 3 detections
         video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=8
     )
-    this_context.detection_repository.add(factory.create())
-    this_context.detection_repository.add(factory.create())
-    this_context.detection_repository.add(factory.create())
+    this_context.detection_repository.add(factory.create(bbox=other_bbox))
+    this_context.detection_repository.add(factory.create(bbox=other_bbox))
+    this_context.detection_repository.add(factory.create(bbox=other_bbox))
 
     # When
     this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))

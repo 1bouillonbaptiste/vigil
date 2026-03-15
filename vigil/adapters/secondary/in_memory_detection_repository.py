@@ -21,3 +21,7 @@ class InMemoryDetectionRepository(DetectionRepository):
     def add(self, detection: Detection) -> None:
         """Add a detection to the detection repository."""
         self._detections.append(detection)
+
+    def save(self, detection: Detection) -> None:
+        """Persist a single detection (protocol-compliant alias for add)."""
+        self._detections.append(detection)

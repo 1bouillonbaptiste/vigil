@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from vigil.business_logic.models.object_class import ObjectClass
+
 
 @dataclass(frozen=True)
 class BoundingBox:
@@ -51,6 +53,9 @@ class Detection:
 
     confidence: float
     """Confidence score of the detection."""
+
+    object_class: ObjectClass
+    """Detected object class."""
 
     def score(self) -> float:
         """Visibility score, the larger the area and the higher the confidence, the best."""

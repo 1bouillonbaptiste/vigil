@@ -71,8 +71,8 @@ class TestIouTrackerCases:
 
         factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=5)
         third_track = [
-            factory.create(bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30)),
-            factory.create(bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30)),
+            factory.create(bbox=BoundingBox(center_x=200, center_y=150, width=10, height=30)),
+            factory.create(bbox=BoundingBox(center_x=200, center_y=150, width=10, height=30)),
         ]
 
         return first_track + second_track + third_track, [first_track, second_track, third_track]

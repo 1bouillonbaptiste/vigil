@@ -9,6 +9,10 @@ readme = "README.md"
 requires-python = ">=3.13,<4.0"
 
 [tool.poetry.dependencies]
+fastapi = "^0.135.1"
+uvicorn = {extras = ["standard"], version = "^0.41.0"}
+opencv-python-headless = "^4.13.0.92"
+ultralytics = "^8.4.22"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -17,10 +21,14 @@ pre-commit = ">=4.2,<5"
 pytest = ">=8.3,<9"
 pytest-cases = ">=3.8,<4"
 pytest-cov = ">=6.1,<7"
+ruff = "^0.15.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = ["integration: tests that require real I/O or external services"]
 
 [tool.coverage.report]
 skip_empty = true

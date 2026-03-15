@@ -14,3 +14,7 @@ class TrackRepository(Protocol):
     def save(self, track: Track) -> None:
         """Save a track to the repository."""
         ...
+
+    def list_by_video_id(self, video_id: UUID) -> list[Track]:
+        """Retrieve all tracks associated to a video."""
+        ...

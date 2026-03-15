@@ -1,7 +1,9 @@
+from collections import Counter
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 from vigil.business_logic.models.detection import Detection
+from vigil.business_logic.models.object_class import ObjectClass
 
 
 @dataclass(frozen=True)
@@ -20,14 +22,20 @@ class Track:
     thumbnail_id: UUID
     """Identifier of the most representative detection in the track."""
 
+    object_class: ObjectClass
+    """Detected object class, derived by majority vote from constituent detections."""
+
     @classmethod
     def create(cls, video_id: UUID, detections: list[Detection]) -> "Track":
         """Creates a new track instance."""
+        class_counts: Counter[ObjectClass] = Counter(d.object_class for d in detections)
+        majority_class = class_counts.most_common(1)[0][0]
         return Track(
             id=uuid4(),
             video_id=video_id,
             detections=[detection.id for detection in detections],
             thumbnail_id=_get_most_representative(detections).id,
+            object_class=majority_class,
         )
 
     def is_valid(self) -> bool:
