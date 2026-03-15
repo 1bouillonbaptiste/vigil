@@ -6,7 +6,7 @@ import pytest
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.iou_tracker import IouTracker
-from vigil.business_logic.models.detection import BoundingBox
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 from tests.helpers import DetectionFactory
@@ -86,7 +86,7 @@ def test_should_select_largest_detection_as_best_on_same_confidence(this_context
     factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     this_context.detection_repository.save(factory.create())
     largest_detection = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=35, confidence=0.8, label="people")
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=35, confidence=0.8, label=ClassLabel.PEOPLE)
     )
     this_context.detection_repository.save(largest_detection)
     this_context.detection_repository.save(factory.create())
@@ -108,11 +108,13 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
     this_context.detection_repository.save(factory.create())
     this_context.detection_repository.save(factory.create())
     best_detection = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label="people")
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label=ClassLabel.PEOPLE)
     )
     this_context.detection_repository.save(best_detection)
     this_context.detection_repository.save(
-        factory.create(bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label="people"))
+        factory.create(
+            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label=ClassLabel.PEOPLE)
+        )
     )
     this_context.detection_repository.save(factory.create())
 

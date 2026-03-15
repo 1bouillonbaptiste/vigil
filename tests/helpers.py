@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from vigil.business_logic.models.detection import BoundingBox, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 
 
 class DetectionFactory:
@@ -13,7 +13,9 @@ class DetectionFactory:
     def __init__(self, video_id: UUID, starting_frame: int = 0) -> None:
         self._video_id = video_id
         self._frame_idx = starting_frame
-        self._default_bbox = BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label="people")
+        self._default_bbox = BoundingBox(
+            center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+        )
 
     def create(self, bbox: BoundingBox | None = None) -> Detection:
         """Create a new detection."""

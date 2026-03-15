@@ -1,5 +1,14 @@
 from dataclasses import dataclass
+from enum import StrEnum
 from uuid import UUID
+
+
+@dataclass(frozen=True)
+class ClassLabel(StrEnum):
+    """Supported classes labels."""
+
+    PEOPLE = "people"
+    VEHICLE = "vehicle"
 
 
 @dataclass(frozen=True)
@@ -16,7 +25,7 @@ class BoundingBox:
     """Height of the bounding box, in pixels."""
     confidence: float
     """Confidence score of the bounding box."""
-    label: str
+    label: ClassLabel
     """Class label of the bounding box."""
 
     @property

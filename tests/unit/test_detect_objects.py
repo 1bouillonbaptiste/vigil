@@ -7,7 +7,7 @@ from pytest_cases import parametrize_with_cases
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.business_logic.gateways.detection_model import DetectionModel
-from vigil.business_logic.models.detection import BoundingBox, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 from vigil.business_logic.models.frame import VideoFrame
 from vigil.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 
@@ -22,7 +22,7 @@ class StubDetectionModel(DetectionModel):
         self._detections: dict[UUID, list[BoundingBox]] = {
             UUID("8d672f18-906e-4ff9-a06d-938898683720"): [],
             UUID("8d672f18-906e-4ff9-a06d-938898683721"): [
-                BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people")
+                BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE)
             ],
         }
 
@@ -74,7 +74,7 @@ class ShouldDetectOnFrameCases:
                 id=uuid4(),  # will be replaced
                 video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
                 frame_position=1,
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label="people"),
+                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
             )
         ]
 

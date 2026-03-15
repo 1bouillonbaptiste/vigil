@@ -3,7 +3,7 @@ from uuid import UUID
 from pytest_cases import parametrize_with_cases
 
 from vigil.adapters.secondary.iou_tracker import IouTracker
-from vigil.business_logic.models.detection import BoundingBox, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 
 from tests.helpers import DetectionFactory
 
@@ -36,7 +36,7 @@ class TestIouTrackerCases:
 
         other_factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=0)
         other = other_factory.create(
-            bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+            bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
         )
 
         return [detection, other], [[detection], [other]]
@@ -52,10 +52,14 @@ class TestIouTrackerCases:
         factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=1)
         second_track = [
             factory.create(
-                bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+                bbox=BoundingBox(
+                    center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+                )
             ),
             factory.create(
-                bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+                bbox=BoundingBox(
+                    center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+                )
             ),
         ]
 
@@ -72,20 +76,28 @@ class TestIouTrackerCases:
         factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=1)
         second_track = [
             factory.create(
-                bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+                bbox=BoundingBox(
+                    center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+                )
             ),
             factory.create(
-                bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+                bbox=BoundingBox(
+                    center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+                )
             ),
         ]
 
         factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=5)
         third_track = [
             factory.create(
-                bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+                bbox=BoundingBox(
+                    center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+                )
             ),
             factory.create(
-                bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label="people")
+                bbox=BoundingBox(
+                    center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
+                )
             ),
         ]
 
@@ -106,10 +118,10 @@ def test_should_split_tracks_when_iou_is_below_min_iou():
     # IoU between these two boxes ≈ 0.43
     factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     detection1 = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label="people")
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
     )
     detection2 = factory.create(
-        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label="people")
+        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
     )
 
     tracker = IouTracker(min_iou=0.5)
@@ -124,10 +136,10 @@ def test_should_keep_track_when_iou_is_above_min_iou():
     # IoU between these two boxes ≈ 0.43
     factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     detection1 = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label="people")
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
     )
     detection2 = factory.create(
-        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label="people")
+        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
     )
 
     tracker = IouTracker(min_iou=0.4)
