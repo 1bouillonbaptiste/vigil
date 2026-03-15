@@ -10,7 +10,7 @@ class VideoFrame:
     """Frame unique identifier."""
 
     position: int
-    """Position of the frame ikn the video."""
+    """Position of the frame in the video."""
 
     video_id: UUID
     """Video identifier the frame comes from."""
