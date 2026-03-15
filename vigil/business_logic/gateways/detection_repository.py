@@ -10,3 +10,7 @@ class DetectionRepository(Protocol):
     def get_by_video_id(self, video_id: UUID) -> list[Detection]:
         """Retrieve all the detections associated to a video."""
         ...
+
+    def save(self, detection: Detection) -> None:
+        """Save the detection to the repository."""
+        ...
