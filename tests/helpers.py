@@ -21,6 +21,7 @@ class DetectionFactory:
         """Create a new detection."""
         detection = Detection(
             id=uuid4(),
+            frame_id=uuid4(),
             video_id=self._video_id,
             bbox=bbox or self._default_bbox,
             frame_position=self._frame_idx,

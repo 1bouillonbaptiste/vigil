@@ -27,6 +27,7 @@ class DetectObjectsUseCase:
             self._detection_repository.save(
                 Detection(
                     id=uuid4(),
+                    frame_id=frame_id,
                     video_id=frame.video_id,
                     frame_position=frame.position,
                     bbox=bbox,

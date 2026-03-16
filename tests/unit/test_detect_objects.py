@@ -72,6 +72,7 @@ class ShouldDetectOnFrameCases:
         return UUID("8d672f18-906e-4ff9-a06d-938898683721"), [
             Detection(
                 id=uuid4(),  # will be replaced
+                frame_id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
                 video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
                 frame_position=1,
                 bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
