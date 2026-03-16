@@ -10,3 +10,7 @@ class FrameRepository(Protocol):
     def get_by_id(self, frame_id: UUID) -> VideoFrame:
         """Retrieve a frame by its id."""
         ...
+
+    def save(self, frame: VideoFrame) -> None:
+        """Save a frame to the repository."""
+        ...
