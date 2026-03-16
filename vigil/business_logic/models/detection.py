@@ -59,5 +59,8 @@ class Detection:
     """Bounding box around the detection."""
 
     def score(self) -> float:
-        """Visibility score, the larger the area and the higher the confidence, the best."""
+        """Visibility score.
+
+        The larger the area and the higher the confidence, the best.
+        """
         return self.bbox.confidence * self.bbox.area

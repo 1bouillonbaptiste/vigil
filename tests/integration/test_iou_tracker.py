@@ -50,7 +50,6 @@ class TestIouTrackerCases:
         return [detection, other], [[detection], [other]], frame_repository
 
     def case_overlaping_tracks(self):
-        """There are two tracks starting at different times, but overlapping on a segment."""
         frame_repository = InMemoryFrameRepository()
         factory = DetectionFactory(frame_repository=frame_repository)
         factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
@@ -76,7 +75,6 @@ class TestIouTrackerCases:
         return first_track + second_track, [first_track, second_track], frame_repository
 
     def case_overlaping_and_disjoint_tracks(self):
-        """There are two tracks starting at different times, but overlapping on a segment."""
         frame_repository = InMemoryFrameRepository()
         factory = DetectionFactory(frame_repository=frame_repository)
         factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))

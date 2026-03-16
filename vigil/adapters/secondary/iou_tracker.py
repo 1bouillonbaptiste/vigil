@@ -8,12 +8,12 @@ from vigil.business_logic.models.detection import Detection
 class IouTracker(Tracker):
     """Implement a tracker with iou comparison across frames.
 
-    The tracker needs to order detections chronologically to decide whether two consecutive detections belong to the
-    same instance.
-    Frame ordering is not stored on detections (it lives on VideoFrame.position) so a FrameRepository is injected to
-    resolve the position of each frame referenced by the input detections.
-    This keeps Detection free of positional metadata while still allowing the algorithm to sort and group detections
-    by frame order.
+    The tracker needs to order detections chronologically to decide whether two
+    consecutive detections belong to the same instance. Frame ordering is not
+    stored on detections (it lives on VideoFrame.position) so a FrameRepository
+    is injected to resolve the position of each frame referenced by the input
+    detections. This keeps Detection free of positional metadata while still
+    allowing the algorithm to sort and group detections by frame order.
     """
 
     def __init__(self, frame_repository: FrameRepository, min_iou: float = 0):
@@ -21,7 +21,7 @@ class IouTracker(Tracker):
         self.min_iou = min_iou
 
     def track(self, detections: list[Detection]) -> list[list[Detection]]:
-        """Continue a track with the highest iou detection within the next frame."""
+        """Track with the highest iou detection within the next frame."""
         if len(detections) < 2:
             return [detections]
 
@@ -51,7 +51,7 @@ class IouTracker(Tracker):
         return tracks
 
     def _get_frame_positions(self, detections: list[Detection]) -> dict[UUID, int]:
-        """Load the frames referenced by detections and return a frame_id -> position mapping."""
+        """Load the frames referenced by detections."""
         frame_ids = {d.frame_id for d in detections}
         return {frame_id: self._frame_repository.get_by_id(frame_id).position for frame_id in frame_ids}
 

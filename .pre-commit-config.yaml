@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
       - id: check-json
@@ -12,13 +12,23 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.11.10'
+    rev: 'v0.15.6'
     hooks:
       - id: ruff-format
       - id: ruff
         args: [--fix]
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
+    hooks:
+      - id: docformatter
+        args: [--in-place, --wrap-summaries, "80", --wrap-descriptions, "80"]
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        args: [--wrap, "80"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.19.1
     hooks:
       - id: mypy
         additional_dependencies: []

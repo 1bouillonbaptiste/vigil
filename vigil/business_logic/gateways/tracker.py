@@ -7,5 +7,8 @@ class Tracker(Protocol):
     """Abstract strategy for tracking objects."""
 
     def track(self, detections: list[Detection]) -> list[list[Detection]]:
-        """Aggregate detections as list of instances, an instance being a list of detections."""
+        """Aggregate detections as list of instances.
+
+        An instance being a list of detections.
+        """
         ...

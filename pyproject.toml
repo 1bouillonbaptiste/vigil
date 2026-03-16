@@ -12,11 +12,17 @@ requires-python = ">=3.13,<4.0"
 
 
 [tool.poetry.group.dev.dependencies]
+docformatter = ">=1.7,<2"
+mdformat = ">=0.7,<1"
 mypy = ">=1.15.0,<2"
 pre-commit = ">=4.2,<5"
 pytest = ">=8.3,<9"
 pytest-cases = ">=3.8,<4"
 pytest-cov = ">=6.1,<7"
+
+[tool.docformatter]
+wrap-summaries = 80
+wrap-descriptions = 80
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
