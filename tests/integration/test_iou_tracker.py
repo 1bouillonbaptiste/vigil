@@ -20,46 +20,49 @@ class TestIouTrackerCases:
         return [], [[]]
 
     def case_single_detection(self):
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-        detection = factory.create()
+        factory = DetectionFactory()
+        factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+        detection = factory.create(at_position=0)
         return [detection], [[detection]]
 
     def case_consecutive_detections(self):
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-        detections = [factory.create(), factory.create()]
+        factory = DetectionFactory()
+        factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+        detections = [factory.create(at_position=0), factory.create(at_position=1)]
         return detections, [detections]
 
     def case_several_detections_on_single_frame(self):
         """The tracker consider two tracks on gap."""
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-        detection = factory.create()
-
-        other_factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=0)
-        other = other_factory.create(
-            bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
+        factory = DetectionFactory()
+        factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+        detection = factory.create(at_position=0)
+        other = factory.create(
+            bbox=BoundingBox(center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE),
+            at_position=0,
         )
 
         return [detection, other], [[detection], [other]]
 
     def case_overlaping_tracks(self):
         """There are two tracks starting at different times, but overlapping on a segment."""
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+        factory = DetectionFactory()
+        factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
         first_track = [
-            factory.create(),
-            factory.create(),
+            factory.create(at_position=0),
+            factory.create(at_position=1),
         ]
-
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=1)
         second_track = [
             factory.create(
                 bbox=BoundingBox(
                     center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
-                )
+                ),
+                at_position=1,
             ),
             factory.create(
                 bbox=BoundingBox(
                     center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
-                )
+                ),
+                at_position=2,
             ),
         ]
 
@@ -67,37 +70,38 @@ class TestIouTrackerCases:
 
     def case_overlaping_and_disjoint_tracks(self):
         """There are two tracks starting at different times, but overlapping on a segment."""
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+        factory = DetectionFactory()
+        factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
         first_track = [
-            factory.create(),
-            factory.create(),
+            factory.create(at_position=0),
+            factory.create(at_position=1),
         ]
-
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=1)
         second_track = [
             factory.create(
                 bbox=BoundingBox(
                     center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
-                )
+                ),
+                at_position=1,
             ),
             factory.create(
                 bbox=BoundingBox(
                     center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
-                )
+                ),
+                at_position=2,
             ),
         ]
-
-        factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=5)
         third_track = [
             factory.create(
                 bbox=BoundingBox(
                     center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
-                )
+                ),
+                at_position=5,
             ),
             factory.create(
                 bbox=BoundingBox(
                     center_x=100, center_y=150, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE
-                )
+                ),
+                at_position=6,
             ),
         ]
 
@@ -116,12 +120,15 @@ def test_can_track_detections_across_frames(detections: list[Detection], expecte
 
 def test_should_split_tracks_when_iou_is_below_min_iou():
     # IoU between these two boxes ≈ 0.43
-    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    factory = DetectionFactory()
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     detection1 = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE),
+        at_position=0,
     )
     detection2 = factory.create(
-        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
+        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE),
+        at_position=1,
     )
 
     tracker = IouTracker(min_iou=0.5)
@@ -134,12 +141,15 @@ def test_should_split_tracks_when_iou_is_below_min_iou():
 
 def test_should_keep_track_when_iou_is_above_min_iou():
     # IoU between these two boxes ≈ 0.43
-    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+    factory = DetectionFactory()
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
     detection1 = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE),
+        at_position=0,
     )
     detection2 = factory.create(
-        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE)
+        bbox=BoundingBox(center_x=104, center_y=50, width=10, height=30, confidence=0.8, label=ClassLabel.PEOPLE),
+        at_position=1,
     )
 
     tracker = IouTracker(min_iou=0.4)
