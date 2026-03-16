@@ -55,9 +55,6 @@ class Detection:
     frame_id: UUID
     """Identifier of the frame the detection was detected in."""
 
-    video_id: UUID
-    """Identifier of the video the detection comes from."""
-
     frame_position: int
     """Frame index of the detection in the video."""
 

@@ -41,7 +41,6 @@ class DetectionFactory:
         detection = Detection(
             id=uuid4(),
             frame_id=frame.id,
-            video_id=self._video_id,
             bbox=bbox or self._default_bbox,
             frame_position=at_position,
         )
