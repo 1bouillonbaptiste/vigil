@@ -4,6 +4,7 @@ from uuid import UUID
 import pytest
 
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
+from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.iou_tracker import IouTracker
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel
@@ -16,6 +17,7 @@ from tests.helpers import DetectionFactory
 class ThisContext:
     """Testing context for `TrackObjectsUseCase`."""
 
+    frame_repository: InMemoryFrameRepository
     detection_repository: InMemoryDetectionRepository
     tracker: IouTracker
     track_repository: InMemoryTrackRepository
@@ -24,15 +26,18 @@ class ThisContext:
 
 @pytest.fixture
 def this_context() -> ThisContext:
+    frame_repository = InMemoryFrameRepository()
     detection_repository = InMemoryDetectionRepository()
-    tracker = IouTracker()
+    tracker = IouTracker(frame_repository=frame_repository)
     track_repository = InMemoryTrackRepository()
     use_case = TrackObjectsUseCase(
+        frame_repository=frame_repository,
         detection_repository=detection_repository,
         tracker=tracker,
         track_repository=track_repository,
     )
     return ThisContext(
+        frame_repository=frame_repository,
         detection_repository=detection_repository,
         tracker=tracker,
         track_repository=track_repository,
@@ -42,11 +47,15 @@ def this_context() -> ThisContext:
 
 def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+
+    factory.create(at_position=0)
+    factory.create(at_position=1)
+    factory.create(at_position=2)
+    factory.create(at_position=3)
 
     # When
     this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
@@ -57,19 +66,23 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
 
 def test_should_track_an_object_appearing_more_than_5_times_included(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-
-    factory = DetectionFactory(  # Invalid track with 3 detections
-        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"), starting_frame=8
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository,
+        detection_repository=this_context.detection_repository,
     )
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+
+    # Valid track with 5 detections
+    factory.create(at_position=0)
+    factory.create(at_position=1)
+    factory.create(at_position=2)
+    factory.create(at_position=3)
+    factory.create(at_position=4)
+
+    # Invalid track with 3 detections
+    factory.create(at_position=8)
+    factory.create(at_position=9)
+    factory.create(at_position=10)
 
     # When
     this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
@@ -83,15 +96,19 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
 
 def test_should_select_largest_detection_as_best_on_same_confidence(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-    this_context.detection_repository.save(factory.create())
-    largest_detection = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=35, confidence=0.8, label=ClassLabel.PEOPLE)
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
     )
-    this_context.detection_repository.save(largest_detection)
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+
+    factory.create(at_position=0)
+    largest_detection = factory.create(
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=35, confidence=0.8, label=ClassLabel.PEOPLE),
+        at_position=1,
+    )
+    factory.create(at_position=2)
+    factory.create(at_position=3)
+    factory.create(at_position=4)
 
     # When
     this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
@@ -104,19 +121,22 @@ def test_should_select_largest_detection_as_best_on_same_confidence(this_context
 
 def test_should_select_highest_score_as_best(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-    this_context.detection_repository.save(factory.create())
-    this_context.detection_repository.save(factory.create())
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
+
+    factory.create(at_position=0)
+    factory.create(at_position=1)
     best_detection = factory.create(
-        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label=ClassLabel.PEOPLE)
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=1, label=ClassLabel.PEOPLE),
+        at_position=2,
     )
-    this_context.detection_repository.save(best_detection)
-    this_context.detection_repository.save(
-        factory.create(
-            bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=0.99, label=ClassLabel.PEOPLE)
-        )
+    factory.create(
+        bbox=BoundingBox(center_x=100, center_y=50, width=10, height=25, confidence=0.99, label=ClassLabel.PEOPLE),
+        at_position=3,
     )
-    this_context.detection_repository.save(factory.create())
+    factory.create(at_position=4)
 
     # When
     this_context.use_case.execute(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
@@ -129,19 +149,24 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
 
 def test_should_not_track_detections_from_wrong_video(this_context: ThisContext):
     # Given
-    first_factory = DetectionFactory(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
-    this_context.detection_repository.save(first_factory.create())
-    this_context.detection_repository.save(first_factory.create())
-    this_context.detection_repository.save(first_factory.create())
-    this_context.detection_repository.save(first_factory.create())
-    this_context.detection_repository.save(first_factory.create())
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
+    factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
-    second_factory = DetectionFactory(video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))
-    this_context.detection_repository.save(second_factory.create())
-    this_context.detection_repository.save(second_factory.create())
-    this_context.detection_repository.save(second_factory.create())
-    this_context.detection_repository.save(second_factory.create())
-    this_context.detection_repository.save(second_factory.create())
+    factory.create(at_position=0)
+    factory.create(at_position=1)
+    factory.create(at_position=2)
+    factory.create(at_position=3)
+    factory.create(at_position=4)
+
+    factory.with_video(UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))
+
+    factory.create(at_position=0)
+    factory.create(at_position=1)
+    factory.create(at_position=2)
+    factory.create(at_position=3)
+    factory.create(at_position=4)
 
     # When
     this_context.use_case.execute(video_id=UUID("6f7f36e7-c0c8-4679-b3c3-835fc20ca59b"))

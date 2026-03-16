@@ -10,11 +10,11 @@ class InMemoryDetectionRepository(DetectionRepository):
     def __init__(self) -> None:
         self._detections: list[Detection] = []
 
-    def get_by_video_id(self, video_id: UUID) -> list[Detection]:
-        """Retrieves the detections associated to a video."""
+    def get_by_frame_id(self, frame_id: UUID) -> list[Detection]:
+        """Retrieves the detections associated to a frame."""
         detections: list[Detection] = []
         for detection in self._detections:
-            if detection.video_id == video_id:
+            if detection.frame_id == frame_id:
                 detections.append(detection)
         return detections
 

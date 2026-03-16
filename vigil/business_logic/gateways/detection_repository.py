@@ -7,8 +7,8 @@ from vigil.business_logic.models.detection import Detection
 class DetectionRepository(Protocol):
     """Interface for storing `Detection` instances in a repository."""
 
-    def get_by_video_id(self, video_id: UUID) -> list[Detection]:
-        """Retrieve all the detections associated to a video."""
+    def get_by_frame_id(self, frame_id: UUID) -> list[Detection]:
+        """Retrieve all the detections associated to a frame."""
         ...
 
     def save(self, detection: Detection) -> None:

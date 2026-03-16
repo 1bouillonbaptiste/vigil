@@ -52,11 +52,8 @@ class Detection:
     id: UUID
     """Identifier of the detection."""
 
-    video_id: UUID
-    """Identifier of the video the detection comes from."""
-
-    frame_position: int
-    """Frame index of the detection in the video."""
+    frame_id: UUID
+    """Identifier of the frame the detection was detected in."""
 
     bbox: BoundingBox
     """Bounding box around the detection."""

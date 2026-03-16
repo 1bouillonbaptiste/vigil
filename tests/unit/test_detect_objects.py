@@ -72,8 +72,7 @@ class ShouldDetectOnFrameCases:
         return UUID("8d672f18-906e-4ff9-a06d-938898683721"), [
             Detection(
                 id=uuid4(),  # will be replaced
-                video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-                frame_position=1,
+                frame_id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
                 bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
             )
         ]
@@ -103,9 +102,9 @@ def test_should_detect_on_frame(
     this_context.use_case.execute(frame_id=frame_id)
 
     # Then
-    detections = this_context.detection_repository.get_by_video_id(
-        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")
-    )
+    detections: list[Detection] = []
+    for frame in this_context.frame_repository.get_by_video_id(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")):
+        detections.extend(this_context.detection_repository.get_by_frame_id(frame_id=frame.id))
     assert len(detections) == len(expected_detections)
     for detection, expected in zip(detections, expected_detections, strict=True):
         assert detection == replace(expected, id=detection.id)
