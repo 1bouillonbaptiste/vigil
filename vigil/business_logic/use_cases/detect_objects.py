@@ -28,7 +28,6 @@ class DetectObjectsUseCase:
                 Detection(
                     id=uuid4(),
                     frame_id=frame_id,
-                    frame_position=frame.position,
                     bbox=bbox,
                 )
             )

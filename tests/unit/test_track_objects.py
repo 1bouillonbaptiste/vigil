@@ -28,7 +28,7 @@ class ThisContext:
 def this_context() -> ThisContext:
     frame_repository = InMemoryFrameRepository()
     detection_repository = InMemoryDetectionRepository()
-    tracker = IouTracker()
+    tracker = IouTracker(frame_repository=frame_repository)
     track_repository = InMemoryTrackRepository()
     use_case = TrackObjectsUseCase(
         frame_repository=frame_repository,

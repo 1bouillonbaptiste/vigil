@@ -1,11 +1,23 @@
+from uuid import UUID
+
+from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.models.detection import Detection
 
 
 class IouTracker(Tracker):
-    """Implement a tracker with iou comparison across frames."""
+    """Implement a tracker with iou comparison across frames.
 
-    def __init__(self, min_iou: float = 0):
+    The tracker needs to order detections chronologically to decide whether two consecutive detections belong to the
+    same instance.
+    Frame ordering is not stored on detections (it lives on VideoFrame.position) so a FrameRepository is injected to
+    resolve the position of each frame referenced by the input detections.
+    This keeps Detection free of positional metadata while still allowing the algorithm to sort and group detections
+    by frame order.
+    """
+
+    def __init__(self, frame_repository: FrameRepository, min_iou: float = 0):
+        self._frame_repository = frame_repository
         self.min_iou = min_iou
 
     def track(self, detections: list[Detection]) -> list[list[Detection]]:
@@ -13,12 +25,15 @@ class IouTracker(Tracker):
         if len(detections) < 2:
             return [detections]
 
+        frame_positions = self._get_frame_positions(detections)
+
         tracks: list[list[Detection]] = []
-        remaining_detections: list[Detection] = sorted(detections, key=lambda d: d.frame_position)
+        remaining_detections: list[Detection] = sorted(detections, key=lambda d: frame_positions[d.frame_id])
         current_track: list[Detection] = [remaining_detections.pop(0)]
         while remaining_detections:
-            next_frame_detections = self._find_detections_on_frame(
-                remaining_detections, current_track[-1].frame_position + 1
+            current_position = frame_positions[current_track[-1].frame_id]
+            next_frame_detections = self._find_detections_at_position(
+                remaining_detections, frame_positions, current_position + 1
             )
             if not next_frame_detections:
                 tracks.append(current_track)
@@ -35,15 +50,21 @@ class IouTracker(Tracker):
         tracks.append(current_track)
         return tracks
 
+    def _get_frame_positions(self, detections: list[Detection]) -> dict[UUID, int]:
+        """Load the frames referenced by detections and return a frame_id -> position mapping."""
+        frame_ids = {d.frame_id for d in detections}
+        return {frame_id: self._frame_repository.get_by_id(frame_id).position for frame_id in frame_ids}
+
     @staticmethod
-    def _find_detections_on_frame(detections: list[Detection], frame_idx: int) -> list[Detection]:
-        """Find all detections within a frame."""
-        return [detection for detection in detections if detection.frame_position == frame_idx]
+    def _find_detections_at_position(
+        detections: list[Detection], frame_positions: dict[UUID, int], position: int
+    ) -> list[Detection]:
+        """Find all detections within a frame at the given position."""
+        return [detection for detection in detections if frame_positions[detection.frame_id] == position]
 
     @staticmethod
     def _distance(detection1: Detection, detection2: Detection) -> float:
         """Calculate the iou between two detections."""
-        # determine the (x, y)-coordinates of the intersection rectangle
         xA = max(detection1.bbox.bottom_left[0], detection2.bbox.bottom_left[0])
         yA = max(detection1.bbox.bottom_left[1], detection2.bbox.bottom_left[1])
         xB = min(detection1.bbox.top_right[0], detection2.bbox.top_right[0])

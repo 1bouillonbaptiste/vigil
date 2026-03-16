@@ -42,7 +42,6 @@ class DetectionFactory:
             id=uuid4(),
             frame_id=frame.id,
             bbox=bbox or self._default_bbox,
-            frame_position=at_position,
         )
         if self._detection_repository is not None:
             self._detection_repository.save(detection)
