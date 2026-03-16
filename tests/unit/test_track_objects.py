@@ -4,6 +4,7 @@ from uuid import UUID
 import pytest
 
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
+from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.iou_tracker import IouTracker
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel
@@ -16,6 +17,7 @@ from tests.helpers import DetectionFactory
 class ThisContext:
     """Testing context for `TrackObjectsUseCase`."""
 
+    frame_repository: InMemoryFrameRepository
     detection_repository: InMemoryDetectionRepository
     tracker: IouTracker
     track_repository: InMemoryTrackRepository
@@ -24,15 +26,18 @@ class ThisContext:
 
 @pytest.fixture
 def this_context() -> ThisContext:
+    frame_repository = InMemoryFrameRepository()
     detection_repository = InMemoryDetectionRepository()
     tracker = IouTracker()
     track_repository = InMemoryTrackRepository()
     use_case = TrackObjectsUseCase(
+        frame_repository=frame_repository,
         detection_repository=detection_repository,
         tracker=tracker,
         track_repository=track_repository,
     )
     return ThisContext(
+        frame_repository=frame_repository,
         detection_repository=detection_repository,
         tracker=tracker,
         track_repository=track_repository,
@@ -42,7 +47,9 @@ def this_context() -> ThisContext:
 
 def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(detection_repository=this_context.detection_repository)
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
     factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
     factory.create(at_position=0)
@@ -60,6 +67,7 @@ def test_should_remove_track_with_fewer_than_5_detections(this_context: ThisCont
 def test_should_track_an_object_appearing_more_than_5_times_included(this_context: ThisContext):
     # Given
     factory = DetectionFactory(
+        frame_repository=this_context.frame_repository,
         detection_repository=this_context.detection_repository,
     )
     factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
@@ -88,7 +96,9 @@ def test_should_track_an_object_appearing_more_than_5_times_included(this_contex
 
 def test_should_select_largest_detection_as_best_on_same_confidence(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(detection_repository=this_context.detection_repository)
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
     factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
     factory.create(at_position=0)
@@ -111,7 +121,9 @@ def test_should_select_largest_detection_as_best_on_same_confidence(this_context
 
 def test_should_select_highest_score_as_best(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(detection_repository=this_context.detection_repository)
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
     factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
     factory.create(at_position=0)
@@ -137,7 +149,9 @@ def test_should_select_highest_score_as_best(this_context: ThisContext):
 
 def test_should_not_track_detections_from_wrong_video(this_context: ThisContext):
     # Given
-    factory = DetectionFactory(detection_repository=this_context.detection_repository)
+    factory = DetectionFactory(
+        frame_repository=this_context.frame_repository, detection_repository=this_context.detection_repository
+    )
     factory.with_video(UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"))
 
     factory.create(at_position=0)
