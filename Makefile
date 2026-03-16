@@ -5,6 +5,10 @@ setup: # setup the environment with poetry
 	poetry run pre-commit install
 	poetry env activate
 
+format: # format docstrings and markdown to 80 chars per line
+	poetry run docformatter --in-place --recursive vigil/
+	poetry run mdformat --wrap 80 .
+
 check: # run quality checks
 	poetry check --lock
 	poetry run pre-commit run -a

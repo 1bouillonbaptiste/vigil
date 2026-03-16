@@ -9,8 +9,8 @@ from vigil.business_logic.models.frame import VideoFrame
 class DetectionFactory:
     """Factory that creates fake detections for testing purpose.
 
-    At creation, the factory saves the detection in a repo if provided.
-    At creation, the factory creates and saves a new frame in a repo if provided.
+    At creation, the factory saves the detection in a repo if provided. At
+    creation, the factory creates and saves a new frame in a repo if provided.
     """
 
     def __init__(
