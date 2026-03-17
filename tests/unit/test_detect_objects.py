@@ -6,6 +6,7 @@ from pytest_cases import parametrize_with_cases
 
 from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
+from vigil.adapters.secondary.in_memory_frame_store import InMemoryFrameStore
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 from vigil.business_logic.models.frame import VideoFrame
@@ -36,6 +37,7 @@ class ThisContext:
     """Context for testing `DetectObjectsUseCase`."""
 
     frame_repository: InMemoryFrameRepository
+    frame_store: InMemoryFrameStore
     detection_model: StubDetectionModel
     detection_repository: InMemoryDetectionRepository
     use_case: DetectObjectsUseCase
@@ -44,13 +46,18 @@ class ThisContext:
 @pytest.fixture
 def this_context() -> ThisContext:
     frame_repository = InMemoryFrameRepository()
+    frame_store = InMemoryFrameStore()
     detection_model = StubDetectionModel()
     detection_repository = InMemoryDetectionRepository()
     use_case = DetectObjectsUseCase(
-        frame_repository=frame_repository, detection_model=detection_model, detection_repository=detection_repository
+        frame_repository=frame_repository,
+        frame_store=frame_store,
+        detection_model=detection_model,
+        detection_repository=detection_repository,
     )
     return ThisContext(
         frame_repository=frame_repository,
+        frame_store=frame_store,
         detection_model=detection_model,
         detection_repository=detection_repository,
         use_case=use_case,
