@@ -23,8 +23,5 @@ class VideoFrame:
 class FrameData:
     """Wrapper for a numpy array containing the frame image data."""
 
-    id: UUID
-    """Frame identifier."""
-
     data: npt.NDArray[np.uint8]
     """Frame image data."""
