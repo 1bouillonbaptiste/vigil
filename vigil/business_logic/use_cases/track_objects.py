@@ -6,6 +6,7 @@ from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.models.detection import Detection
 from vigil.business_logic.models.track import Track
+from vigil.business_logic.services.id_factory import IdFactory
 
 
 class TrackObjectsUseCase:
@@ -30,7 +31,8 @@ class TrackObjectsUseCase:
         for instance_detections in instances:
             if not instance_detections:
                 continue
-            new_track = Track.create(video_id=video_id, detections=instance_detections)
+            track_id = IdFactory.new_track_id(video_id=video_id, detection_id=instance_detections[0].id)
+            new_track = Track.create(track_id=track_id, video_id=video_id, detections=instance_detections)
             if new_track.is_valid():
                 self._tracks_repository.save(new_track)
 
