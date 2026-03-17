@@ -77,43 +77,48 @@ class ShouldDetectOnFrameCases:
     """
 
     def case_empty_detections(self):
-        return UUID("8d672f18-906e-4ff9-a06d-938898683720"), []
+        frame = VideoFrame(
+            id=UUID("8d672f18-906e-4ff9-a06d-938898683720"),
+            position=0,
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+        )
+        data = FrameData(data=np.array([0, 0], dtype=np.uint8))
+        return frame, data, []
 
     def case_one_people(self):
-        return UUID("8d672f18-906e-4ff9-a06d-938898683721"), [
-            Detection(
-                id=uuid4(),  # will be replaced
-                frame_id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
-            )
-        ]
+        frame = VideoFrame(
+            id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
+            position=1,
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+        )
+        data = FrameData(data=np.array([[0, 0], [1, 0]], dtype=np.uint8))
+        return (
+            frame,
+            data,
+            [
+                Detection(
+                    id=uuid4(),  # will be replaced
+                    frame_id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
+                    bbox=BoundingBox(
+                        center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE
+                    ),
+                )
+            ],
+        )
 
 
-@parametrize_with_cases("frame_id, expected_detections", cases=ShouldDetectOnFrameCases)
+@parametrize_with_cases("frame, data, expected_detections", cases=ShouldDetectOnFrameCases)
 def test_should_detect_on_frame(
-    this_context: ThisContext, frame_id: UUID, expected_detections: list[Detection]
+    this_context: ThisContext, frame: VideoFrame, data: FrameData, expected_detections: list[Detection]
 ) -> None:
     # Given
-    frame0 = VideoFrame(
-        id=UUID("8d672f18-906e-4ff9-a06d-938898683720"),
-        position=0,
-        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-    )
-    this_context.frame_repository.save(frame0)
-    this_context.frame_store.store(frame0, FrameData(data=np.array([0, 0], dtype=np.uint8)))
-
-    frame1 = VideoFrame(
-        id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
-        position=1,
-        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-    )
-    this_context.frame_repository.save(frame1)
-    this_context.frame_store.store(frame1, FrameData(data=np.array([[0, 0], [1, 0]], dtype=np.uint8)))
+    this_context.frame_repository.save(frame)
+    this_context.frame_store.store(frame, data)
 
     # When
-    this_context.use_case.execute(frame_id=frame_id)
+    this_context.use_case.execute(frame_id=frame.id)
 
     # Then
-    detections = this_context.detection_repository.get_by_frame_id(frame_id=frame_id)
+    detections = this_context.detection_repository.get_by_frame_id(frame_id=frame.id)
     for detection, expected in zip(detections, expected_detections, strict=True):
         assert detection == replace(expected, id=detection.id)
