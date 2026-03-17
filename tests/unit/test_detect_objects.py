@@ -114,9 +114,6 @@ def test_should_detect_on_frame(
     this_context.use_case.execute(frame_id=frame_id)
 
     # Then
-    detections: list[Detection] = []
-    for frame in this_context.frame_repository.get_by_video_id(video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb")):
-        detections.extend(this_context.detection_repository.get_by_frame_id(frame_id=frame.id))
-    assert len(detections) == len(expected_detections)
+    detections = this_context.detection_repository.get_by_frame_id(frame_id=frame_id)
     for detection, expected in zip(detections, expected_detections, strict=True):
         assert detection == replace(expected, id=detection.id)
