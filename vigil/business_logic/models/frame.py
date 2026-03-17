@@ -1,16 +1,30 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+import numpy as np
+import numpy.typing as npt
+
 
 @dataclass(frozen=True)
 class VideoFrame:
-    """Represent a video frame."""
+    """Represent a single frame from a video."""
 
     id: UUID
     """Frame unique identifier."""
 
     position: int
-    """Position of the frame in the video."""
+    """Ordering position of the frame in the video."""
 
     video_id: UUID
-    """Video identifier the frame comes from."""
+    """Video identifier the frame originally comes from."""
+
+
+@dataclass(frozen=True)
+class FrameData:
+    """Wrapper for a numpy array containing the frame image data."""
+
+    id: UUID
+    """Frame identifier."""
+
+    data: npt.NDArray[np.uint8]
+    """Frame image data."""
