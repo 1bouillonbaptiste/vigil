@@ -1,9 +1,10 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from vigil.business_logic.gateways.detection_repository import DetectionRepository
 from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 from vigil.business_logic.models.frame import VideoFrame
+from vigil.business_logic.services.id_factory import IdFactory
 
 
 class DetectionFactory:
@@ -38,10 +39,11 @@ class DetectionFactory:
         if self._video_id is None or self._default_bbox is None:
             raise RuntimeError("Set video and bbox before creating new detection.")
         frame = self._get_frame(video_id=self._video_id, position=at_position)
+        bbox = bbox or self._default_bbox
         detection = Detection(
-            id=uuid4(),
+            id=IdFactory.new_detection_id(frame_id=frame.id, bbox=bbox),
             frame_id=frame.id,
-            bbox=bbox or self._default_bbox,
+            bbox=bbox,
         )
         if self._detection_repository is not None:
             self._detection_repository.save(detection)
@@ -52,7 +54,7 @@ class DetectionFactory:
         frame = self._frame_registry.find(video_id=video_id, position=position)
         if frame is None:
             frame = VideoFrame(
-                id=uuid4(),
+                id=IdFactory.new_frame_id(video_id=video_id, position=position),
                 video_id=video_id,
                 position=position,
             )

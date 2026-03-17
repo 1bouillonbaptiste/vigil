@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from vigil.business_logic.models.detection import Detection
 
@@ -21,10 +21,10 @@ class Track:
     """Identifier of the most representative detection in the track."""
 
     @classmethod
-    def create(cls, video_id: UUID, detections: list[Detection]) -> "Track":
+    def create(cls, track_id: UUID, video_id: UUID, detections: list[Detection]) -> "Track":
         """Creates a new track instance."""
         return Track(
-            id=uuid4(),
+            id=track_id,
             video_id=video_id,
             detections=[detection.id for detection in detections],
             thumbnail_id=_get_most_representative(detections).id,

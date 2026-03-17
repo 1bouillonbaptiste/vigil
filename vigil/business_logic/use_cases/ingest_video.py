@@ -1,10 +1,9 @@
-from uuid import uuid4
-
 from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.gateways.frame_store import FrameStore
 from vigil.business_logic.gateways.video_reader import VideoReader
 from vigil.business_logic.models.frame import VideoFrame
 from vigil.business_logic.models.video_source import VideoSource
+from vigil.business_logic.services.id_factory import IdFactory
 
 
 class IngestVideoUseCase:
@@ -18,6 +17,10 @@ class IngestVideoUseCase:
     def execute(self, source: VideoSource) -> None:
         """Execute the video ingestion."""
         for position, data in enumerate(self._video_reader.read(source)):
-            new_frame = VideoFrame(id=uuid4(), video_id=source.video_id, position=position)
+            new_frame = VideoFrame(
+                id=IdFactory.new_frame_id(video_id=source.video_id, position=position),
+                video_id=source.video_id,
+                position=position,
+            )
             self._frame_repository.save(new_frame)
             self._frame_store.store(frame=new_frame, data=data)
