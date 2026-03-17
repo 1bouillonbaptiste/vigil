@@ -1,5 +1,6 @@
-from dataclasses import dataclass, replace
-from uuid import UUID, uuid4
+from dataclasses import dataclass
+from typing import ClassVar
+from uuid import UUID
 
 import numpy as np
 import pytest
@@ -9,7 +10,7 @@ from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDete
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_frame_store import InMemoryFrameStore
 from vigil.business_logic.gateways.detection_model import DetectionModel
-from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel
 from vigil.business_logic.models.frame import FrameData, VideoFrame
 from vigil.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 
@@ -19,6 +20,11 @@ class FakeDetectionModel(DetectionModel):
 
     The model detects a bbox of size 1 for each non-zero pixel.
     """
+
+    _class_mapping: ClassVar[dict[int, ClassLabel]] = {
+        1: ClassLabel.PEOPLE,
+        2: ClassLabel.VEHICLE,
+    }
 
     def detect(self, frame: FrameData) -> list[BoundingBox]:
         """Return the detections associated to a frame id."""
@@ -30,9 +36,10 @@ class FakeDetectionModel(DetectionModel):
                 width=1,
                 height=1,
                 confidence=0.5,
-                label=ClassLabel.PEOPLE,
+                label=label,
             )
             for row, col in np.argwhere(frame.data != 0)
+            if (label := self._class_mapping.get(frame.data[row, col].item())) is not None
         ]
 
 
@@ -95,21 +102,29 @@ class ShouldDetectOnFrameCases:
         return (
             frame,
             data,
+            [BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE)],
+        )
+
+    def case_one_people_one_vehicle(self):
+        frame = VideoFrame(
+            id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
+            position=1,
+            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
+        )
+        data = FrameData(data=np.array([[0, 2], [1, 0]], dtype=np.uint8))
+        return (
+            frame,
+            data,
             [
-                Detection(
-                    id=uuid4(),  # will be replaced
-                    frame_id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
-                    bbox=BoundingBox(
-                        center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE
-                    ),
-                )
+                BoundingBox(center_x=1, center_y=1, width=1, height=1, confidence=0.5, label=ClassLabel.VEHICLE),
+                BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
             ],
         )
 
 
 @parametrize_with_cases("frame, data, expected_detections", cases=ShouldDetectOnFrameCases)
 def test_should_detect_on_frame(
-    this_context: ThisContext, frame: VideoFrame, data: FrameData, expected_detections: list[Detection]
+    this_context: ThisContext, frame: VideoFrame, data: FrameData, expected_detections: list[BoundingBox]
 ) -> None:
     # Given
     this_context.frame_repository.save(frame)
@@ -120,5 +135,4 @@ def test_should_detect_on_frame(
 
     # Then
     detections = this_context.detection_repository.get_by_frame_id(frame_id=frame.id)
-    for detection, expected in zip(detections, expected_detections, strict=True):
-        assert detection == replace(expected, id=detection.id)
+    assert {detection.bbox for detection in detections} == set(expected_detections)
