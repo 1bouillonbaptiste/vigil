@@ -17,12 +17,12 @@ class InMemoryFrameRepository(FrameRepository):
         return self._frames[frame_id]
 
     def get_by_video_id(self, video_id: UUID) -> list[VideoFrame]:
-        """Retrieves a frame by its video id."""
+        """Retrieves ordered frames from a video."""
         frames: list[VideoFrame] = []
         for frame in self._frames.values():
             if frame.video_id == video_id:
                 frames.append(frame)
-        return frames
+        return sorted(frames, key=lambda f: f.position)
 
     def save(self, frame: VideoFrame) -> None:
         """Stores a frame in memory."""
