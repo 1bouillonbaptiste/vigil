@@ -25,7 +25,8 @@ class DetectObjectsUseCase:
     def execute(self, frame_id: UUID) -> None:
         """Execute the use case on a single frame."""
         frame = self._frame_repository.get_by_id(frame_id)
-        bboxes = self._detection_model.detect(frame)
+        data = self._frame_store.load(frame)
+        bboxes = self._detection_model.detect(data)
         for bbox in bboxes:
             self._detection_repository.save(
                 Detection(

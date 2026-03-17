@@ -1,6 +1,7 @@
 from dataclasses import dataclass, replace
 from uuid import UUID, uuid4
 
+import numpy as np
 import pytest
 from pytest_cases import parametrize_with_cases
 
@@ -9,27 +10,30 @@ from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRep
 from vigil.adapters.secondary.in_memory_frame_store import InMemoryFrameStore
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
-from vigil.business_logic.models.frame import VideoFrame
+from vigil.business_logic.models.frame import FrameData, VideoFrame
 from vigil.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 
 
-class StubDetectionModel(DetectionModel):
-    """Store detections for testing purpose.
+class FakeDetectionModel(DetectionModel):
+    """Fake implementation for testing purpose.
 
-    Each item represents the detections associated to a frame id.
+    The model detects a bbox of size 1 for each non-zero pixel.
     """
 
-    def __init__(self) -> None:
-        self._detections: dict[UUID, list[BoundingBox]] = {
-            UUID("8d672f18-906e-4ff9-a06d-938898683720"): [],
-            UUID("8d672f18-906e-4ff9-a06d-938898683721"): [
-                BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE)
-            ],
-        }
-
-    def detect(self, frame: VideoFrame) -> list[BoundingBox]:
+    def detect(self, frame: FrameData) -> list[BoundingBox]:
         """Return the detections associated to a frame id."""
-        return self._detections[frame.id]
+        num_rows = frame.data.shape[0]
+        return [
+            BoundingBox(
+                center_x=int(col),
+                center_y=int(num_rows - 1 - row),
+                width=1,
+                height=1,
+                confidence=0.5,
+                label=ClassLabel.PEOPLE,
+            )
+            for row, col in np.argwhere(frame.data != 0)
+        ]
 
 
 @dataclass
@@ -38,7 +42,7 @@ class ThisContext:
 
     frame_repository: InMemoryFrameRepository
     frame_store: InMemoryFrameStore
-    detection_model: StubDetectionModel
+    detection_model: FakeDetectionModel
     detection_repository: InMemoryDetectionRepository
     use_case: DetectObjectsUseCase
 
@@ -47,7 +51,7 @@ class ThisContext:
 def this_context() -> ThisContext:
     frame_repository = InMemoryFrameRepository()
     frame_store = InMemoryFrameStore()
-    detection_model = StubDetectionModel()
+    detection_model = FakeDetectionModel()
     detection_repository = InMemoryDetectionRepository()
     use_case = DetectObjectsUseCase(
         frame_repository=frame_repository,
@@ -90,20 +94,21 @@ def test_should_detect_on_frame(
     this_context: ThisContext, frame_id: UUID, expected_detections: list[Detection]
 ) -> None:
     # Given
-    this_context.frame_repository.save(
-        VideoFrame(
-            id=UUID("8d672f18-906e-4ff9-a06d-938898683720"),
-            position=0,
-            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-        )
+    frame0 = VideoFrame(
+        id=UUID("8d672f18-906e-4ff9-a06d-938898683720"),
+        position=0,
+        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
     )
-    this_context.frame_repository.save(
-        VideoFrame(
-            id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
-            position=1,
-            video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
-        )
+    this_context.frame_repository.save(frame0)
+    this_context.frame_store.store(frame0, FrameData(data=np.array([0, 0], dtype=np.uint8)))
+
+    frame1 = VideoFrame(
+        id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
+        position=1,
+        video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
     )
+    this_context.frame_repository.save(frame1)
+    this_context.frame_store.store(frame1, FrameData(data=np.array([[0, 0], [1, 0]], dtype=np.uint8)))
 
     # When
     this_context.use_case.execute(frame_id=frame_id)
