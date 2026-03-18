@@ -1,12 +1,14 @@
 from typing import Protocol
 
+import numpy as np
+import numpy.typing as npt
+
 from vigil.business_logic.models.detection import BoundingBox
-from vigil.business_logic.models.frame import FrameData
 
 
 class DetectionModel(Protocol):
     """Abstract detection model."""
 
-    def detect(self, frame: FrameData) -> list[BoundingBox]:
-        """Run the model on a single frame."""
+    def detect(self, data: npt.NDArray[np.uint8]) -> list[BoundingBox]:
+        """Run the model on raw frame pixel data."""
         ...
