@@ -16,6 +16,6 @@ class InMemoryTrackRepository(TrackRepository):
         """Get `track` from the repository."""
         return self._tracks[track_id]
 
-    def list_tracks(self) -> list[Track]:
-        """List all tracks in the repository."""
-        return list(self._tracks.values())
+    def list_open_tracks(self) -> list[Track]:
+        """List all open tracks in the repository."""
+        return [track for track in self._tracks.values() if not track.closed]

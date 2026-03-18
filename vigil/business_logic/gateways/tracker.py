@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from vigil.business_logic.models.detection import Detection
-from vigil.business_logic.models.track import Track, TrackAssignments
+from vigil.business_logic.models.track import Track
 
 
 class Tracker(Protocol):
@@ -11,6 +11,12 @@ class Tracker(Protocol):
     existing tracks.
     """
 
-    def update(self, tracks: list[Track], detections: list[Detection]) -> TrackAssignments:
-        """Assign new detections to existing tracks."""
+    def update(self, tracks: list[Track], detections: list[Detection]) -> list[tuple[Track, Detection]]:
+        """Assign new detections to existing open tracks.
+
+        Returns a list of (track, detection) pairs. Each pair means the
+        detection continues the track. Tracks absent from the result missed this
+        frame; detections absent from the result are orphans that start new
+        tracks.
+        """
         ...

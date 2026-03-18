@@ -8,7 +8,7 @@ from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRep
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 from vigil.business_logic.models.frame import FrameId
-from vigil.business_logic.models.track import Track, TrackAssignments, TrackId
+from vigil.business_logic.models.track import Track, TrackId
 from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
@@ -18,13 +18,11 @@ FRAME_ID = FrameId(UUID("8d672f18-906e-4ff9-a06d-938898683720"))
 class FakeTracker(Tracker):
     """Implement a tracker for testing purpose."""
 
-    def update(self, tracks: list[Track], detections: list[Detection]) -> TrackAssignments:
+    def update(self, tracks: list[Track], detections: list[Detection]) -> list[tuple[Track, Detection]]:
         """A track is continued only with identical boxes."""
-        matches = [
+        return [
             (track, detection) for track in tracks for detection in detections if self._is_a_match(track, detection)
         ]
-        orphans = list(set(detections) - {match[1] for match in matches})
-        return TrackAssignments(orphan_detections=orphans, matches=matches)
 
     @staticmethod
     def _is_a_match(track: Track, detection: Detection) -> bool:
@@ -70,7 +68,7 @@ def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisConte
     this_context.use_case.execute(frame_id=FRAME_ID)
 
     # Then
-    assert this_context.track_repository.list_tracks() == [
+    assert this_context.track_repository.list_open_tracks() == [
         Track(
             id=TrackId(UUID("e435ff2c-33f4-577e-8a6d-f5a2b04a100b")),
             detections=[
@@ -106,7 +104,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     this_context.use_case.execute(frame_id=FRAME_ID)
 
     # Then
-    assert this_context.track_repository.list_tracks() == [
+    assert this_context.track_repository.list_open_tracks() == [
         Track(
             id=TrackId(UUID("4c3757bf-51e9-5e26-8dc4-ceb8e8913641")),
             detections=[
@@ -121,3 +119,20 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
             ],
         ),
     ]
+
+
+def test_should_close_a_track_with_no_matching_detection(this_context: ThisContext):
+    # Given: an open track with no detection matching the incoming frame
+    unmatched_detection = Detection(
+        id=UUID("630eb021-73c9-404e-ba8e-000000000000"),
+        frame_id=FrameId(UUID("8d672f18-906e-4ff9-a06d-31f1ee58a170")),
+        bbox=BoundingBox(center_x=99, center_y=99, width=10, height=10, confidence=0.5, label=ClassLabel.PEOPLE),
+    )
+    unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
+    this_context.track_repository.save(unmatched_track)
+
+    # When
+    this_context.use_case.execute(frame_id=FRAME_ID)
+
+    # Then
+    assert this_context.track_repository.get_by_id(unmatched_track.id).closed is True

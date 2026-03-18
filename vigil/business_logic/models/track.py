@@ -1,4 +1,4 @@
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import NewType
 from uuid import UUID
 
@@ -18,17 +18,13 @@ class Track:
     detections: list[Detection]
     """Detections associated with this track."""
 
+    closed: bool = field(default=False)
+    """Whether this track is closed (no longer updated)."""
+
     def extend(self, detection: Detection) -> "Track":
         """Add a new detection to this track."""
         return replace(self, detections=[*self.detections, detection])
 
-
-@dataclass(frozen=True)
-class TrackAssignments:
-    """Store detections assigned to tracks."""
-
-    orphan_detections: list[Detection]
-    """Detections associated with no tracks."""
-
-    matches: list[tuple[Track, Detection]]
-    """Tracks with a matching detection."""
+    def close(self) -> "Track":
+        """Close this track."""
+        return replace(self, closed=True)

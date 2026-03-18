@@ -14,6 +14,6 @@ class TrackRepository(Protocol):
         """Get a track from the repository."""
         ...
 
-    def list_tracks(self) -> list[Track]:
-        """List all tracks in the repository."""
+    def list_open_tracks(self) -> list[Track]:
+        """List all open (not yet closed) tracks."""
         ...
