@@ -18,8 +18,3 @@ class IdFactory:
     def new_frame_id(video_id: UUID, position: int) -> UUID:
         """Generate an id for `VideoFrame`."""
         return uuid5(NAMESPACE_URL, f"{video_id}:{position}")
-
-    @staticmethod
-    def new_track_id(video_id: UUID, detection_id: UUID) -> UUID:
-        """Generate an id for `Track`."""
-        return uuid5(NAMESPACE_URL, f"{video_id}:{detection_id}")

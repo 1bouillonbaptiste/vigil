@@ -27,23 +27,6 @@ class BoundingBox:
     label: ClassLabel
     """Class label of the bounding box."""
 
-    @property
-    def area(self) -> float:
-        """Bbox area in squared pixels."""
-        return self.width * self.height
-
-    @property
-    def bottom_left(self) -> tuple[int, int]:
-        """Coordinates of the bottom left corner pixel."""
-        return self.center_x - self.width // 2, self.center_y - self.height // 2
-
-    @property
-    def top_right(self) -> tuple[int, int]:
-        """Coordinates of the top right corner pixel."""
-        _odd_width = self.width % 2
-        _odd_height = self.height % 2
-        return self.center_x + self.width // 2 + _odd_width, self.center_y + self.height // 2 + _odd_height
-
 
 @dataclass(frozen=True)
 class Detection:
@@ -57,10 +40,3 @@ class Detection:
 
     bbox: BoundingBox
     """Bounding box around the detection."""
-
-    def score(self) -> float:
-        """Visibility score.
-
-        The larger the area and the higher the confidence, the best.
-        """
-        return self.bbox.confidence * self.bbox.area

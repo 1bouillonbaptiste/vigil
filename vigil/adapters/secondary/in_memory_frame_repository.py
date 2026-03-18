@@ -12,8 +12,6 @@ class InMemoryFrameRepository(FrameRepository):
 
     def get_by_id(self, frame_id: UUID) -> VideoFrame:
         """Retrieves a frame by its id."""
-        if frame_id not in self._frames:
-            raise KeyError(f"Frame with ID {frame_id} not found.")
         return self._frames[frame_id]
 
     def get_by_video_id(self, video_id: UUID) -> list[VideoFrame]:
