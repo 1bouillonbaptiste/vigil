@@ -11,7 +11,7 @@ from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRep
 from vigil.adapters.secondary.in_memory_frame_store import InMemoryFrameStore
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel
-from vigil.business_logic.models.frame import FrameData, VideoFrame
+from vigil.business_logic.models.frame import FrameData, FrameId, VideoFrame
 from vigil.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 
 
@@ -85,7 +85,7 @@ class ShouldDetectOnFrameCases:
 
     def case_empty_detections(self):
         frame = VideoFrame(
-            id=UUID("8d672f18-906e-4ff9-a06d-938898683720"),
+            id=FrameId(UUID("8d672f18-906e-4ff9-a06d-938898683720")),
             position=0,
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
         )
@@ -94,7 +94,7 @@ class ShouldDetectOnFrameCases:
 
     def case_one_people(self):
         frame = VideoFrame(
-            id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
+            id=FrameId(UUID("8d672f18-906e-4ff9-a06d-938898683721")),
             position=1,
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
         )
@@ -107,7 +107,7 @@ class ShouldDetectOnFrameCases:
 
     def case_one_people_one_vehicle(self):
         frame = VideoFrame(
-            id=UUID("8d672f18-906e-4ff9-a06d-938898683721"),
+            id=FrameId(UUID("8d672f18-906e-4ff9-a06d-938898683721")),
             position=1,
             video_id=UUID("9022e4bf-4ff8-4381-8dcd-b8dd588325cb"),
         )

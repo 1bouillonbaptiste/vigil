@@ -1,15 +1,19 @@
 from dataclasses import dataclass
+from typing import NewType
 from uuid import UUID
 
 import numpy as np
 import numpy.typing as npt
+
+FrameId = NewType("FrameId", UUID)
+"""Frame unique identifier."""
 
 
 @dataclass(frozen=True)
 class VideoFrame:
     """Represent a single frame from a video."""
 
-    id: UUID
+    id: FrameId
     """Frame unique identifier."""
 
     position: int

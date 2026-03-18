@@ -1,14 +1,22 @@
 from typing import Protocol
 
 from vigil.business_logic.models.detection import Detection
+from vigil.business_logic.models.track import Track
 
 
 class Tracker(Protocol):
-    """Abstract strategy for tracking objects."""
+    """Interface for trackers.
 
-    def track(self, detections: list[Detection]) -> list[list[Detection]]:
-        """Aggregate detections as list of instances.
+    Each tracker implementation is responsible to match new detections to
+    existing tracks.
+    """
 
-        An instance being a list of detections.
+    def update(self, tracks: list[Track], detections: list[Detection]) -> list[tuple[Track, Detection]]:
+        """Assign new detections to existing open tracks.
+
+        Returns a list of (track, detection) pairs. Each pair means the
+        detection continues the track. Tracks absent from the result missed this
+        frame; detections absent from the result are orphans that start new
+        tracks.
         """
         ...

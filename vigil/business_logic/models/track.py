@@ -1,40 +1,37 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
+from typing import NewType
 from uuid import UUID
 
 from vigil.business_logic.models.detection import Detection
 
+TrackId = NewType("TrackId", UUID)
+"""Track unique identifier."""
+
+_GRACE_PERIOD: int = 5
+"""Number of consecutive missed frames before a track is closed."""
+
 
 @dataclass(frozen=True)
 class Track:
-    """Represent a track."""
+    """Represent a single object instance over time."""
 
-    id: UUID
-    """Identifier of the track."""
+    id: TrackId
+    """Track unique identifier."""
 
-    video_id: UUID
-    """Identifier of the video where the track comes from."""
+    detections: list[Detection]
+    """Detections associated with this track."""
 
-    detections: list[UUID]
-    """Identifiers of the detections tracked by the object."""
+    closed: bool = field(default=False)
+    """Whether this track is closed (no longer updated)."""
 
-    thumbnail_id: UUID
-    """Identifier of the most representative detection in the track."""
+    _missed_frames: int = field(default=0)
+    """Consecutive frames for which this track had no matching detection."""
 
-    @classmethod
-    def create(cls, track_id: UUID, video_id: UUID, detections: list[Detection]) -> "Track":
-        """Creates a new track instance."""
-        return Track(
-            id=track_id,
-            video_id=video_id,
-            detections=[detection.id for detection in detections],
-            thumbnail_id=_get_most_representative(detections).id,
-        )
+    def extend(self, detection: Detection) -> "Track":
+        """Add detection to this track and reset missed-frame counter."""
+        return replace(self, detections=[*self.detections, detection], _missed_frames=0)
 
-    def is_valid(self) -> bool:
-        """Check if the track has enough detections to be tracked."""
-        return len(self.detections) > 4
-
-
-def _get_most_representative(detections: list[Detection]) -> Detection:
-    """Find the most representative detection, first one by default."""
-    return max(detections, key=lambda detection: detection.score())
+    def miss(self) -> "Track":
+        """Record a missed frame, closing the track after the grace period."""
+        missed = self._missed_frames + 1
+        return replace(self, _missed_frames=missed, closed=missed >= _GRACE_PERIOD)

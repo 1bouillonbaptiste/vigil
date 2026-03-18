@@ -32,6 +32,7 @@ class DetectObjectsUseCase:
             self._detection_repository.save(
                 Detection(
                     id=IdFactory.new_detection_id(frame_id=frame_id, bbox=bbox),
+                    video_id=frame.video_id,
                     frame_id=frame_id,
                     bbox=bbox,
                 )
