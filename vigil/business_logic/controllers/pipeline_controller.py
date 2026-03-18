@@ -50,8 +50,10 @@ class PipelineController:
 
     def _flush(self, batch: list[Frame]) -> None:
         """Process a full batch of frames."""
-        for detection in self._detection_service.detect(batch):
+        detections = self._detection_service.detect(batch)
+        for detection in detections:
             self._detection_store.save(detection)
 
         for frame in batch:
-            self._track_use_case.execute(frame_id=frame.id, video_id=frame.video_id)
+            frame_detections = [d for d in detections if d.frame_id == frame.id]
+            self._track_use_case.execute(video_id=frame.video_id, detections=frame_detections)

@@ -11,6 +11,7 @@ from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRep
 from vigil.business_logic.controllers.pipeline_controller import PipelineController
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.gateways.tracker import Tracker
+from vigil.business_logic.gateways.video_reader import VideoReader
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
 from vigil.business_logic.models.track import Track
 from vigil.business_logic.models.video_source import VideoSource
@@ -20,7 +21,7 @@ from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 SOURCE = VideoSource(uri="test-video")
 
 
-class StubVideoReader:
+class StubVideoReader(VideoReader):
     """Controllable video reader for tests."""
 
     def __init__(self) -> None:
@@ -73,7 +74,6 @@ def _make_context(batch_size: int) -> ThisContext:
     spy_tracker = SpyTracker()
     detection_service = DetectionService(model=FakeDetectionModel())
     track_use_case = TrackObjectsUseCase(
-        detection_store=detection_store,
         track_repository=track_repository,
         tracker=spy_tracker,
     )
