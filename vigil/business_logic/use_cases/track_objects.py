@@ -28,7 +28,7 @@ class TrackObjectsUseCase:
             self._track_repository.save(track.extend(detection))
 
         for track in self._missed_tracks(matches, open_tracks):
-            self._track_repository.save(track.close())
+            self._track_repository.save(track.miss())
 
     @staticmethod
     def _orphan_detections(matches: list[tuple[Track, Detection]], detections: list[Detection]) -> list[Detection]:

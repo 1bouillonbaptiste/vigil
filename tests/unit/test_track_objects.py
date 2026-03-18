@@ -121,7 +121,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     ]
 
 
-def test_should_close_a_track_with_no_matching_detection(this_context: ThisContext):
+def test_should_close_a_track_after_grace_period_of_missed_frames(this_context: ThisContext):
     # Given: an open track with no detection matching the incoming frame
     unmatched_detection = Detection(
         id=UUID("630eb021-73c9-404e-ba8e-000000000000"),
@@ -131,8 +131,55 @@ def test_should_close_a_track_with_no_matching_detection(this_context: ThisConte
     unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
     this_context.track_repository.save(unmatched_track)
 
-    # When
-    this_context.use_case.execute(frame_id=FRAME_ID)
+    # When: the track is missed for the full grace period
+    for _ in range(5):
+        this_context.use_case.execute(frame_id=FRAME_ID)
 
     # Then
     assert this_context.track_repository.get_by_id(unmatched_track.id).closed is True
+
+
+def test_should_keep_a_track_open_within_grace_period(this_context: ThisContext):
+    # Given
+    unmatched_detection = Detection(
+        id=UUID("630eb021-73c9-404e-ba8e-000000000000"),
+        frame_id=FrameId(UUID("8d672f18-906e-4ff9-a06d-31f1ee58a170")),
+        bbox=BoundingBox(center_x=99, center_y=99, width=10, height=10, confidence=0.5, label=ClassLabel.PEOPLE),
+    )
+    unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
+    this_context.track_repository.save(unmatched_track)
+
+    # When: the track is missed but still within the grace period
+    for _ in range(4):
+        this_context.use_case.execute(frame_id=FRAME_ID)
+
+    # Then
+    assert this_context.track_repository.get_by_id(unmatched_track.id).closed is False
+
+
+def test_should_reset_grace_period_when_track_is_matched_again(this_context: ThisContext):
+    # Given: a track missed 3 times, then matched, then missed 4 more times
+    bbox = BoundingBox(center_x=1, center_y=1, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE)
+    first_detection = Detection(
+        id=UUID("630eb021-73c9-404e-ba8e-000000000000"),
+        frame_id=FrameId(UUID("8d672f18-906e-4ff9-a06d-31f1ee58a170")),
+        bbox=bbox,
+    )
+    this_context.track_repository.save(Track(id=IdFactory.new_track_id(first_detection), detections=[first_detection]))
+
+    empty_frame = FrameId(UUID("00000000-0000-0000-0000-000000000000"))
+    for _ in range(3):
+        this_context.use_case.execute(frame_id=empty_frame)
+
+    match_frame = FrameId(UUID("00000000-0000-0000-0000-000000000001"))
+    this_context.detection_repository.save(
+        Detection(id=UUID("630eb021-73c9-404e-ba8e-000000000001"), frame_id=match_frame, bbox=bbox)
+    )
+    this_context.use_case.execute(frame_id=match_frame)
+
+    for _ in range(4):
+        this_context.use_case.execute(frame_id=empty_frame)
+
+    # Then: 4 misses after a match is within the grace period
+    open_tracks = this_context.track_repository.list_open_tracks()
+    assert len(open_tracks) == 1
