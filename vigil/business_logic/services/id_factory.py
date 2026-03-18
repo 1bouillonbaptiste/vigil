@@ -1,6 +1,6 @@
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-from vigil.business_logic.models.detection import BoundingBox, Detection
+from vigil.business_logic.models.detection import Detection
 from vigil.business_logic.models.frame import FrameId
 from vigil.business_logic.models.track import TrackId
 
@@ -12,13 +12,8 @@ class IdFactory:
     """
 
     @staticmethod
-    def new_detection_id(frame_id: UUID, bbox: BoundingBox) -> UUID:
-        """Generate an id for `Detection`."""
-        return uuid5(NAMESPACE_URL, f"{frame_id}:{bbox}")
-
-    @staticmethod
     def new_frame_id(video_id: UUID, position: int) -> FrameId:
-        """Generate an id for `VideoFrame`."""
+        """Generate an id for `Frame`."""
         return FrameId(uuid5(NAMESPACE_URL, f"{video_id}:{position}"))
 
     @staticmethod

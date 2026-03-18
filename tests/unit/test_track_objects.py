@@ -3,7 +3,7 @@ from uuid import UUID
 
 import pytest
 
-from vigil.adapters.secondary.in_memory_detection_repository import InMemoryDetectionRepository
+from vigil.adapters.secondary.in_memory_detection_store import InMemoryDetectionStore
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
@@ -36,7 +36,7 @@ class FakeTracker(Tracker):
 class ThisContext:
     """Context for testing the tracking use case."""
 
-    detection_repository: InMemoryDetectionRepository
+    detection_store: InMemoryDetectionStore
     track_repository: InMemoryTrackRepository
     tracker: FakeTracker
     use_case: TrackObjectsUseCase
@@ -44,25 +44,24 @@ class ThisContext:
 
 @pytest.fixture(scope="function")
 def this_context() -> ThisContext:
-    detection_repository = InMemoryDetectionRepository()
+    detection_store = InMemoryDetectionStore()
     track_repository = InMemoryTrackRepository()
     tracker = FakeTracker()
     use_case = TrackObjectsUseCase(
-        detection_repository=detection_repository,
+        detection_store=detection_store,
         track_repository=track_repository,
         tracker=tracker,
     )
     return ThisContext(
-        detection_repository=detection_repository,
+        detection_store=detection_store,
         track_repository=track_repository,
         tracker=tracker,
         use_case=use_case,
     )
 
 
-def _detection(detection_id: str, frame_id: FrameId, bbox: BoundingBox) -> Detection:
+def _detection(frame_id: FrameId, bbox: BoundingBox) -> Detection:
     return Detection(
-        id=UUID(detection_id),
         video_id=VIDEO_ID,
         frame_id=frame_id,
         bbox=bbox,
@@ -75,8 +74,8 @@ OTHER_BBOX = BoundingBox(center_x=99, center_y=99, width=10, height=10, confiden
 
 def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisContext):
     # Given
-    detection = _detection("630eb021-73c9-404e-ba8e-000000000000", FRAME_ID, BBOX)
-    this_context.detection_repository.save(detection)
+    detection = _detection(FRAME_ID, BBOX)
+    this_context.detection_store.save(detection)
 
     # When
     this_context.use_case.execute(frame_id=FRAME_ID, video_id=VIDEO_ID)
@@ -92,10 +91,10 @@ def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisConte
 
 def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     # Given
-    first_detection = _detection("630eb021-73c9-404e-ba8e-000000000000", OTHER_FRAME_ID, BBOX)
-    second_detection = _detection("630eb021-73c9-404e-ba8e-000000000001", FRAME_ID, BBOX)
+    first_detection = _detection(OTHER_FRAME_ID, BBOX)
+    second_detection = _detection(FRAME_ID, BBOX)
     this_context.track_repository.save(Track(id=IdFactory.new_track_id(first_detection), detections=[first_detection]))
-    this_context.detection_repository.save(second_detection)
+    this_context.detection_store.save(second_detection)
 
     # When
     this_context.use_case.execute(frame_id=FRAME_ID, video_id=VIDEO_ID)
@@ -111,7 +110,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
 
 def test_should_close_a_track_after_grace_period_of_missed_frames(this_context: ThisContext):
     # Given: an open track whose bbox never matches the incoming frames
-    unmatched_detection = _detection("630eb021-73c9-404e-ba8e-000000000000", OTHER_FRAME_ID, OTHER_BBOX)
+    unmatched_detection = _detection(OTHER_FRAME_ID, OTHER_BBOX)
     unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
     this_context.track_repository.save(unmatched_track)
 
@@ -125,7 +124,7 @@ def test_should_close_a_track_after_grace_period_of_missed_frames(this_context: 
 
 def test_should_keep_a_track_open_within_grace_period(this_context: ThisContext):
     # Given
-    unmatched_detection = _detection("630eb021-73c9-404e-ba8e-000000000000", OTHER_FRAME_ID, OTHER_BBOX)
+    unmatched_detection = _detection(OTHER_FRAME_ID, OTHER_BBOX)
     unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
     this_context.track_repository.save(unmatched_track)
 
@@ -139,14 +138,14 @@ def test_should_keep_a_track_open_within_grace_period(this_context: ThisContext)
 
 def test_should_reset_grace_period_when_track_is_matched_again(this_context: ThisContext):
     # Given: a track missed 3 times, then matched, then missed 4 more times
-    first_detection = _detection("630eb021-73c9-404e-ba8e-000000000000", OTHER_FRAME_ID, BBOX)
+    first_detection = _detection(OTHER_FRAME_ID, BBOX)
     this_context.track_repository.save(Track(id=IdFactory.new_track_id(first_detection), detections=[first_detection]))
 
     for _ in range(3):
         this_context.use_case.execute(frame_id=EMPTY_FRAME_ID, video_id=VIDEO_ID)
 
     match_frame = FrameId(UUID("00000000-0000-0000-0000-000000000001"))
-    this_context.detection_repository.save(_detection("630eb021-73c9-404e-ba8e-000000000001", match_frame, BBOX))
+    this_context.detection_store.save(_detection(match_frame, BBOX))
     this_context.use_case.execute(frame_id=match_frame, video_id=VIDEO_ID)
 
     for _ in range(4):
@@ -160,7 +159,6 @@ def test_should_not_mix_tracks_across_videos(this_context: ThisContext):
     # Given: a track belonging to another video
     other_video_id = UUID("ffffffff-0000-0000-0000-000000000000")
     detection = Detection(
-        id=UUID("630eb021-73c9-404e-ba8e-000000000000"),
         video_id=other_video_id,
         frame_id=OTHER_FRAME_ID,
         bbox=BBOX,
