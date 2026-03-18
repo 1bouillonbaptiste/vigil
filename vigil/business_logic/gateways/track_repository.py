@@ -1,4 +1,5 @@
 from typing import Protocol
+from uuid import UUID
 
 from vigil.business_logic.models.track import Track, TrackId
 
@@ -14,6 +15,6 @@ class TrackRepository(Protocol):
         """Get a track from the repository."""
         ...
 
-    def list_open_tracks(self) -> list[Track]:
-        """List all open (not yet closed) tracks."""
+    def list_open_tracks(self, video_id: UUID) -> list[Track]:
+        """List all open tracks for a given video."""
         ...

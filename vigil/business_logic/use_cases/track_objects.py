@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from vigil.business_logic.gateways.detection_repository import DetectionRepository
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
@@ -15,10 +17,10 @@ class TrackObjectsUseCase:
         self._track_repository = track_repository
         self._tracker = tracker
 
-    def execute(self, frame_id: FrameId) -> None:
+    def execute(self, frame_id: FrameId, video_id: UUID) -> None:
         """Update existing tracks on a frame detections."""
         detections = self._detection_repository.get_by_frame_id(frame_id)
-        open_tracks = self._track_repository.list_open_tracks()
+        open_tracks = self._track_repository.list_open_tracks(video_id)
         matches = self._tracker.update(tracks=open_tracks, detections=detections)
 
         for detection in self._orphan_detections(matches, detections):

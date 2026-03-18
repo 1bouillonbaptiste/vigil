@@ -35,6 +35,9 @@ class Detection:
     id: UUID
     """Identifier of the detection."""
 
+    video_id: UUID
+    """Identifier of the video the detection belongs to."""
+
     frame_id: UUID
     """Identifier of the frame the detection was detected in."""
 

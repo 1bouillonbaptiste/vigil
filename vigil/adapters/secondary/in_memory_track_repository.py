@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.models.track import Track, TrackId
 
@@ -16,6 +18,6 @@ class InMemoryTrackRepository(TrackRepository):
         """Get `track` from the repository."""
         return self._tracks[track_id]
 
-    def list_open_tracks(self) -> list[Track]:
-        """List all open tracks in the repository."""
-        return [track for track in self._tracks.values() if not track.closed]
+    def list_open_tracks(self, video_id: UUID) -> list[Track]:
+        """List all open tracks for a given video."""
+        return [t for t in self._tracks.values() if not t.closed and t.detections[0].video_id == video_id]
