@@ -56,7 +56,6 @@ def this_context() -> ThisContext:
 
 def _detection(frame_id: FrameId, bbox: BoundingBox) -> Detection:
     return Detection(
-        video_id=VIDEO_ID,
         frame_id=frame_id,
         bbox=bbox,
     )
@@ -77,6 +76,7 @@ def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisConte
     assert this_context.track_repository.list_open_tracks(VIDEO_ID) == [
         Track(
             id=TrackId(UUID("e435ff2c-33f4-577e-8a6d-f5a2b04a100b")),
+            video_id=VIDEO_ID,
             detections=[detection],
         ),
     ]
@@ -86,7 +86,9 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     # Given
     first_detection = _detection(OTHER_FRAME_ID, BBOX)
     second_detection = _detection(FRAME_ID, BBOX)
-    this_context.track_repository.save(Track(id=IdFactory.new_track_id(first_detection), detections=[first_detection]))
+    this_context.track_repository.save(
+        Track(id=IdFactory.new_track_id(first_detection), video_id=VIDEO_ID, detections=[first_detection])
+    )
 
     # When
     this_context.use_case.execute(video_id=VIDEO_ID, detections=[second_detection])
@@ -95,6 +97,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     assert this_context.track_repository.list_open_tracks(VIDEO_ID) == [
         Track(
             id=TrackId(UUID("4c3757bf-51e9-5e26-8dc4-ceb8e8913641")),
+            video_id=VIDEO_ID,
             detections=[first_detection, second_detection],
         ),
     ]
@@ -103,7 +106,9 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
 def test_should_close_a_track_after_grace_period_of_missed_frames(this_context: ThisContext):
     # Given: an open track whose bbox never matches the incoming frames
     unmatched_detection = _detection(OTHER_FRAME_ID, OTHER_BBOX)
-    unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
+    unmatched_track = Track(
+        id=IdFactory.new_track_id(unmatched_detection), video_id=VIDEO_ID, detections=[unmatched_detection]
+    )
     this_context.track_repository.save(unmatched_track)
 
     # When: the track is missed for the full grace period
@@ -117,7 +122,9 @@ def test_should_close_a_track_after_grace_period_of_missed_frames(this_context: 
 def test_should_keep_a_track_open_within_grace_period(this_context: ThisContext):
     # Given
     unmatched_detection = _detection(OTHER_FRAME_ID, OTHER_BBOX)
-    unmatched_track = Track(id=IdFactory.new_track_id(unmatched_detection), detections=[unmatched_detection])
+    unmatched_track = Track(
+        id=IdFactory.new_track_id(unmatched_detection), video_id=VIDEO_ID, detections=[unmatched_detection]
+    )
     this_context.track_repository.save(unmatched_track)
 
     # When: the track is missed but still within the grace period
@@ -131,7 +138,9 @@ def test_should_keep_a_track_open_within_grace_period(this_context: ThisContext)
 def test_should_reset_grace_period_when_track_is_matched_again(this_context: ThisContext):
     # Given: a track missed 3 times, then matched, then missed 4 more times
     first_detection = _detection(OTHER_FRAME_ID, BBOX)
-    this_context.track_repository.save(Track(id=IdFactory.new_track_id(first_detection), detections=[first_detection]))
+    this_context.track_repository.save(
+        Track(id=IdFactory.new_track_id(first_detection), video_id=VIDEO_ID, detections=[first_detection])
+    )
 
     for _ in range(3):
         this_context.use_case.execute(video_id=VIDEO_ID, detections=[])
@@ -150,11 +159,12 @@ def test_should_not_mix_tracks_across_videos(this_context: ThisContext):
     # Given: a track belonging to another video
     other_video_id = UUID("ffffffff-0000-0000-0000-000000000000")
     detection = Detection(
-        video_id=other_video_id,
         frame_id=OTHER_FRAME_ID,
         bbox=BBOX,
     )
-    this_context.track_repository.save(Track(id=IdFactory.new_track_id(detection), detections=[detection]))
+    this_context.track_repository.save(
+        Track(id=IdFactory.new_track_id(detection), video_id=other_video_id, detections=[detection])
+    )
 
     # When: tracking runs for a different video
     this_context.use_case.execute(video_id=VIDEO_ID, detections=[])

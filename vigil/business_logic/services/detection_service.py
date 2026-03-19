@@ -28,7 +28,6 @@ class DetectionService:
             for bbox in bboxes:
                 detections.append(
                     Detection(
-                        video_id=frame.video_id,
                         frame_id=frame.id,
                         bbox=bbox,
                     )

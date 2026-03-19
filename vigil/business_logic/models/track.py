@@ -18,6 +18,9 @@ class Track:
     id: TrackId
     """Track unique identifier."""
 
+    video_id: UUID
+    """Identifier of the video this track belongs to."""
+
     detections: list[Detection]
     """Detections associated with this track."""
 
