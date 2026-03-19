@@ -20,7 +20,9 @@ class TrackObjectsUseCase:
         matches = self._tracker.update(tracks=open_tracks, detections=detections)
 
         for detection in self._orphan_detections(matches, detections):
-            self._track_repository.save(Track(id=IdFactory.new_track_id(detection), detections=[detection]))
+            self._track_repository.save(
+                Track(id=IdFactory.new_track_id(detection), video_id=video_id, detections=[detection])
+            )
 
         for track, detection in matches:
             self._track_repository.save(track.extend(detection))

@@ -20,4 +20,4 @@ class InMemoryTrackRepository(TrackRepository):
 
     def list_open_tracks(self, video_id: UUID) -> list[Track]:
         """List all open tracks for a given video."""
-        return [t for t in self._tracks.values() if not t.closed and t.detections[0].video_id == video_id]
+        return [t for t in self._tracks.values() if not t.closed and t.video_id == video_id]

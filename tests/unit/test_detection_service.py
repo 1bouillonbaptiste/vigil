@@ -72,7 +72,6 @@ class ShouldMapBatchOutputToDetectionsCases:
         frames = [Frame(id=FRAME_ID_0, position=0, video_id=VIDEO_ID, data=np.array([[1, 0]], dtype=np.uint8))]
         expected = [
             Detection(
-                video_id=VIDEO_ID,
                 frame_id=FRAME_ID_0,
                 bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
             )
@@ -86,12 +85,10 @@ class ShouldMapBatchOutputToDetectionsCases:
         ]
         expected = [
             Detection(
-                video_id=VIDEO_ID,
                 frame_id=FRAME_ID_0,
                 bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
             ),
             Detection(
-                video_id=VIDEO_ID,
                 frame_id=FRAME_ID_1,
                 bbox=BoundingBox(center_x=1, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.VEHICLE),
             ),

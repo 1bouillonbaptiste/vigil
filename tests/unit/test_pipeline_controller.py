@@ -66,7 +66,8 @@ class ThisContext:
     controller: PipelineController
 
 
-def _make_context(batch_size: int) -> ThisContext:
+@pytest.fixture(scope="function")
+def this_context() -> ThisContext:
     video_reader = StubVideoReader()
     frame_repository = InMemoryFrameRepository()
     detection_store = InMemoryDetectionStore()
@@ -83,7 +84,7 @@ def _make_context(batch_size: int) -> ThisContext:
         detection_service=detection_service,
         detection_store=detection_store,
         track_use_case=track_use_case,
-        batch_size=batch_size,
+        batch_size=2,
     )
     return ThisContext(
         video_reader=video_reader,
@@ -92,11 +93,6 @@ def _make_context(batch_size: int) -> ThisContext:
         spy_tracker=spy_tracker,
         controller=controller,
     )
-
-
-@pytest.fixture
-def this_context() -> ThisContext:
-    return _make_context(batch_size=2)
 
 
 def test_should_store_all_frames(this_context: ThisContext) -> None:
@@ -150,15 +146,14 @@ def test_should_handle_empty_video(this_context: ThisContext) -> None:
     assert this_context.spy_tracker.called_with_detections == []
 
 
-def test_should_run_detection_per_batch() -> None:
+def test_should_run_detection_per_batch(this_context: ThisContext) -> None:
     # Given: 3 frames with batch_size=2 → one full batch + one partial
-    ctx = _make_context(batch_size=2)
-    ctx.video_reader.add(np.array([1], dtype=np.uint8))
-    ctx.video_reader.add(np.array([1], dtype=np.uint8))
-    ctx.video_reader.add(np.array([1], dtype=np.uint8))
+    this_context.video_reader.add(np.array([1], dtype=np.uint8))
+    this_context.video_reader.add(np.array([1], dtype=np.uint8))
+    this_context.video_reader.add(np.array([1], dtype=np.uint8))
 
     # When
-    ctx.controller.execute(SOURCE)
+    this_context.controller.execute(SOURCE)
 
     # Then: tracker called once per frame (3 total across 2 flush rounds)
-    assert len(ctx.spy_tracker.called_with_detections) == 3
+    assert len(this_context.spy_tracker.called_with_detections) == 3
