@@ -6,7 +6,7 @@ from uuid import UUID
 class ClassLabel(StrEnum):
     """Supported classes labels."""
 
-    PEOPLE = "people"
+    PERSON = "person"
     VEHICLE = "vehicle"
 
 

@@ -38,10 +38,10 @@ class FakeDetectionModel(DetectionModel):
     """Returns one fixed bbox per non-empty frame, no bbox for all-zero
     frames."""
 
-    _PEOPLE_BBOX = BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.9, label=ClassLabel.PEOPLE)
+    _PERSON_BBOX = BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.9, label=ClassLabel.PERSON)
 
     def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[BoundingBox]]:
-        return [[self._PEOPLE_BBOX] if frame.any() else [] for frame in frames]
+        return [[self._PERSON_BBOX] if frame.any() else [] for frame in frames]
 
 
 class SpyTracker(Tracker):

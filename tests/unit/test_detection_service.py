@@ -24,7 +24,7 @@ class FakeDetectionModel(DetectionModel):
     """
 
     _class_mapping: ClassVar[dict[int, ClassLabel]] = {
-        1: ClassLabel.PEOPLE,
+        1: ClassLabel.PERSON,
         2: ClassLabel.VEHICLE,
     }
 
@@ -68,12 +68,12 @@ class ShouldMapBatchOutputToDetectionsCases:
         frames = [Frame(id=FRAME_ID_0, position=0, video_id=VIDEO_ID, data=np.array([0, 0], dtype=np.uint8))]
         return frames, []
 
-    def case_single_frame_one_people(self):
+    def case_single_frame_one_person(self):
         frames = [Frame(id=FRAME_ID_0, position=0, video_id=VIDEO_ID, data=np.array([[1, 0]], dtype=np.uint8))]
         expected = [
             Detection(
                 frame_id=FRAME_ID_0,
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
+                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PERSON),
             )
         ]
         return frames, expected
@@ -86,7 +86,7 @@ class ShouldMapBatchOutputToDetectionsCases:
         expected = [
             Detection(
                 frame_id=FRAME_ID_0,
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE),
+                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PERSON),
             ),
             Detection(
                 frame_id=FRAME_ID_1,
