@@ -8,8 +8,14 @@ from vigil.business_logic.models.track import TrackId
 class IdFactory:
     """Identifiers management service.
 
-    Manage ids where deterministic ids are mandatory: ...
+    All deterministic ID generation lives here. Deterministic means the same
+    inputs always produce the same UUID.
     """
+
+    @staticmethod
+    def new_video_id(uri: str) -> UUID:
+        """Generate a deterministic id for a video from its URI."""
+        return uuid5(NAMESPACE_URL, uri)
 
     @staticmethod
     def new_frame_id(video_id: UUID, position: int) -> FrameId:
