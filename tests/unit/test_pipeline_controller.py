@@ -100,7 +100,7 @@ def test_should_store_all_frames(this_context: ThisContext) -> None:
     this_context.controller.execute(SOURCE)
 
     # Then
-    frames = this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE.uri))
+    frames = this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE))
     assert len(frames) == 2
     assert [f.position for f in frames] == [0, 1]
 
@@ -114,7 +114,7 @@ def test_should_track_frames_in_order(this_context: ThisContext) -> None:
     this_context.controller.execute(SOURCE)
 
     # Then: tracker called twice, frame 0 before frame 1
-    frames = this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE.uri))
+    frames = this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE))
     assert len(this_context.spy_tracker.called_with_detections) == 2
     assert this_context.spy_tracker.called_with_detections[0][0].frame_id == frames[0].id
     assert this_context.spy_tracker.called_with_detections[1][0].frame_id == frames[1].id
@@ -138,7 +138,7 @@ def test_should_handle_empty_video(this_context: ThisContext) -> None:
     this_context.controller.execute(SOURCE)
 
     # Then
-    assert this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE.uri)) == []
+    assert this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE)) == []
     assert this_context.spy_tracker.called_with_detections == []
 
 

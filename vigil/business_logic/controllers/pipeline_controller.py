@@ -26,7 +26,7 @@ class PipelineController:
 
     def execute(self, source: VideoSource) -> None:
         """Run the pipeline for a video source."""
-        video_id = IdFactory.new_video_id(source.uri)
+        video_id = IdFactory.new_video_id(source)
         batch: list[Frame] = []
 
         for position, data in enumerate(self._video_reader.read(source)):

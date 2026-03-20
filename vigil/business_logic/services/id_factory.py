@@ -3,6 +3,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from vigil.business_logic.models.detection import Detection
 from vigil.business_logic.models.frame import FrameId
 from vigil.business_logic.models.track import TrackId
+from vigil.business_logic.models.video_source import VideoSource
 
 
 class IdFactory:
@@ -13,9 +14,9 @@ class IdFactory:
     """
 
     @staticmethod
-    def new_video_id(uri: str) -> UUID:
-        """Generate a deterministic id for a video from its URI."""
-        return uuid5(NAMESPACE_URL, uri)
+    def new_video_id(source: VideoSource) -> UUID:
+        """Generate a deterministic id for a video from its source URI."""
+        return uuid5(NAMESPACE_URL, source.uri)
 
     @staticmethod
     def new_frame_id(video_id: UUID, position: int) -> FrameId:
