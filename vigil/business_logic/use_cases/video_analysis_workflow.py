@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.gateways.video_reader import VideoReader
 from vigil.business_logic.models.frame import Frame
@@ -7,8 +9,11 @@ from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 
-class PipelineController:
-    """Orchestrate the full read-detect-track pipeline over a video source."""
+class VideoAnalysisWorkflow:
+    """Track objects across a video.
+
+    Orchestrates use cases and services to analyse a video source end-to-end.
+    """
 
     def __init__(
         self,
@@ -24,8 +29,8 @@ class PipelineController:
         self._track_use_case = track_use_case
         self._batch_size = batch_size
 
-    def execute(self, source: VideoSource) -> None:
-        """Run the pipeline for a video source."""
+    def execute(self, source: VideoSource) -> UUID:
+        """Run the pipeline for a video source and return the video_id."""
         video_id = IdFactory.new_video_id(source)
         batch: list[Frame] = []
 
@@ -45,6 +50,8 @@ class PipelineController:
 
         if batch:
             self._flush(batch)
+
+        return video_id
 
     def _flush(self, batch: list[Frame]) -> None:
         """Process a full batch of frames."""
