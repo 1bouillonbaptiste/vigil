@@ -25,10 +25,9 @@ class IdFactory:
 
     @staticmethod
     def new_track_id(detection: Detection) -> TrackId:
-        """Generate an id for `Track`.
+        """Generate a deterministic id for a `Track` from its first detection.
 
-        The id is deterministic for reusability.
-        A bbox is a value object given a frame:
-        two different frame can have the same bbox, but a single frame cannot hold the same two bboxes.
+        Keyed on frame and bounding box: two different frames can share the same
+        bbox, but a single frame cannot contain two identical bboxes.
         """
-        return TrackId(uuid5(NAMESPACE_URL, f"{detection.frame_id}:{detection.bbox}"))
+        return TrackId(uuid5(NAMESPACE_URL, f"{detection.frame_id}:{detection.prediction.bbox}"))
