@@ -61,8 +61,8 @@ def _detection(frame_id: FrameId, bbox: BoundingBox) -> Detection:
     )
 
 
-BBOX = BoundingBox(center_x=1, center_y=1, width=1, height=1, confidence=0.5, label=ClassLabel.PEOPLE)
-OTHER_BBOX = BoundingBox(center_x=99, center_y=99, width=10, height=10, confidence=0.5, label=ClassLabel.PEOPLE)
+BBOX = BoundingBox(center_x=1, center_y=1, width=1, height=1, confidence=0.5, label=ClassLabel.PERSON)
+OTHER_BBOX = BoundingBox(center_x=99, center_y=99, width=10, height=10, confidence=0.5, label=ClassLabel.PERSON)
 
 
 def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisContext):
@@ -75,7 +75,7 @@ def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisConte
     # Then
     assert this_context.track_repository.list_open_tracks(VIDEO_ID) == [
         Track(
-            id=TrackId(UUID("e435ff2c-33f4-577e-8a6d-f5a2b04a100b")),
+            id=TrackId(UUID("4c683d38-d107-578d-b37f-728273126923")),
             video_id=VIDEO_ID,
             detections=[detection],
         ),
@@ -96,7 +96,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     # Then
     assert this_context.track_repository.list_open_tracks(VIDEO_ID) == [
         Track(
-            id=TrackId(UUID("4c3757bf-51e9-5e26-8dc4-ceb8e8913641")),
+            id=TrackId(UUID("86256341-ac07-565c-b467-e2075113077f")),
             video_id=VIDEO_ID,
             detections=[first_detection, second_detection],
         ),
