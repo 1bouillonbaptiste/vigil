@@ -3,7 +3,6 @@ from uuid import UUID
 from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.gateways.video_reader import VideoReader
 from vigil.business_logic.models.frame import Frame
-from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
@@ -29,12 +28,11 @@ class VideoAnalysisWorkflow:
         self._track_use_case = track_use_case
         self._batch_size = batch_size
 
-    def execute(self, source: VideoSource) -> UUID:
-        """Run the pipeline for a video source and return the video_id."""
-        video_id = IdFactory.new_video_id(source)
+    def execute(self, video_id: UUID) -> None:
+        """Run the pipeline for the given video."""
         batch: list[Frame] = []
 
-        for position, data in enumerate(self._video_reader.read(source)):
+        for position, data in enumerate(self._video_reader.read(video_id)):
             frame = Frame(
                 id=IdFactory.new_frame_id(video_id=video_id, position=position),
                 video_id=video_id,
@@ -50,8 +48,6 @@ class VideoAnalysisWorkflow:
 
         if batch:
             self._flush(batch)
-
-        return video_id
 
     def _flush(self, batch: list[Frame]) -> None:
         """Process a full batch of frames."""
