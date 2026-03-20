@@ -65,6 +65,18 @@ BBOX = BoundingBox(center_x=1, center_y=1, width=1, height=1, confidence=0.5, la
 OTHER_BBOX = BoundingBox(center_x=99, center_y=99, width=10, height=10, confidence=0.5, label=ClassLabel.PERSON)
 
 
+def test_should_store_detections_as_immutable_tuple(this_context: ThisContext):
+    # Given
+    detection = _detection(FRAME_ID, BBOX)
+
+    # When
+    this_context.use_case.execute(video_id=VIDEO_ID, detections=[detection])
+
+    # Then
+    track = this_context.track_repository.list_open_tracks(VIDEO_ID)[0]
+    assert isinstance(track.detections, tuple)
+
+
 def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisContext):
     # Given
     detection = _detection(FRAME_ID, BBOX)
@@ -77,7 +89,7 @@ def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisConte
         Track(
             id=TrackId(UUID("4c683d38-d107-578d-b37f-728273126923")),
             video_id=VIDEO_ID,
-            detections=[detection],
+            detections=(detection,),
         ),
     ]
 
@@ -87,7 +99,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     first_detection = _detection(OTHER_FRAME_ID, BBOX)
     second_detection = _detection(FRAME_ID, BBOX)
     this_context.track_repository.save(
-        Track(id=IdFactory.new_track_id(first_detection), video_id=VIDEO_ID, detections=[first_detection])
+        Track(id=IdFactory.new_track_id(first_detection), video_id=VIDEO_ID, detections=(first_detection,))
     )
 
     # When
@@ -98,7 +110,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
         Track(
             id=TrackId(UUID("86256341-ac07-565c-b467-e2075113077f")),
             video_id=VIDEO_ID,
-            detections=[first_detection, second_detection],
+            detections=(first_detection, second_detection),
         ),
     ]
 
@@ -107,7 +119,7 @@ def test_should_close_a_track_after_grace_period_of_missed_frames(this_context: 
     # Given: an open track whose bbox never matches the incoming frames
     unmatched_detection = _detection(OTHER_FRAME_ID, OTHER_BBOX)
     unmatched_track = Track(
-        id=IdFactory.new_track_id(unmatched_detection), video_id=VIDEO_ID, detections=[unmatched_detection]
+        id=IdFactory.new_track_id(unmatched_detection), video_id=VIDEO_ID, detections=(unmatched_detection,)
     )
     this_context.track_repository.save(unmatched_track)
 
@@ -123,7 +135,7 @@ def test_should_keep_a_track_open_within_grace_period(this_context: ThisContext)
     # Given
     unmatched_detection = _detection(OTHER_FRAME_ID, OTHER_BBOX)
     unmatched_track = Track(
-        id=IdFactory.new_track_id(unmatched_detection), video_id=VIDEO_ID, detections=[unmatched_detection]
+        id=IdFactory.new_track_id(unmatched_detection), video_id=VIDEO_ID, detections=(unmatched_detection,)
     )
     this_context.track_repository.save(unmatched_track)
 
@@ -139,7 +151,7 @@ def test_should_reset_grace_period_when_track_is_matched_again(this_context: Thi
     # Given: a track missed 3 times, then matched, then missed 4 more times
     first_detection = _detection(OTHER_FRAME_ID, BBOX)
     this_context.track_repository.save(
-        Track(id=IdFactory.new_track_id(first_detection), video_id=VIDEO_ID, detections=[first_detection])
+        Track(id=IdFactory.new_track_id(first_detection), video_id=VIDEO_ID, detections=(first_detection,))
     )
 
     for _ in range(3):
@@ -163,7 +175,7 @@ def test_should_not_mix_tracks_across_videos(this_context: ThisContext):
         bbox=BBOX,
     )
     this_context.track_repository.save(
-        Track(id=IdFactory.new_track_id(detection), video_id=other_video_id, detections=[detection])
+        Track(id=IdFactory.new_track_id(detection), video_id=other_video_id, detections=(detection,))
     )
 
     # When: tracking runs for a different video
