@@ -21,7 +21,7 @@ class TrackObjectsUseCase:
 
         for detection in self._orphan_detections(matches, detections):
             self._track_repository.save(
-                Track(id=IdFactory.new_track_id(detection), video_id=video_id, detections=[detection])
+                Track(id=IdFactory.new_track_id(detection), video_id=video_id, detections=(detection,))
             )
 
         for track, detection in matches:

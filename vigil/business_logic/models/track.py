@@ -21,8 +21,8 @@ class Track:
     video_id: UUID
     """Identifier of the video this track belongs to."""
 
-    detections: list[Detection]
-    """Detections associated with this track."""
+    detections: tuple[Detection, ...]
+    """Ordered, immutable sequence of detections associated with this track."""
 
     closed: bool = field(default=False)
     """Whether this track is closed (no longer updated)."""
@@ -32,7 +32,7 @@ class Track:
 
     def extend(self, detection: Detection) -> "Track":
         """Add detection to this track and reset missed-frame counter."""
-        return replace(self, detections=[*self.detections, detection], _missed_frames=0)
+        return replace(self, detections=(*self.detections, detection), _missed_frames=0)
 
     def miss(self) -> "Track":
         """Record a missed frame, closing the track after the grace period."""
