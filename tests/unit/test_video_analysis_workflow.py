@@ -34,6 +34,9 @@ class StubVideoReader(VideoReader):
     def read(self, video_id: UUID) -> Iterable[npt.NDArray[np.uint8]]:
         return self._frames
 
+    def frame_count(self, video_id: UUID) -> int:
+        return len(self._frames)
+
 
 class FakeDetectionModel(DetectionModel):
     """Returns one fixed prediction per non-empty frame, no prediction for all-
