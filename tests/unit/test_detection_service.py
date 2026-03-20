@@ -8,7 +8,7 @@ import pytest
 from pytest_cases import parametrize_with_cases
 
 from vigil.business_logic.gateways.detection_model import DetectionModel
-from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
 from vigil.business_logic.models.frame import Frame, FrameId
 from vigil.business_logic.services.detection_service import DetectionService
 
@@ -28,18 +28,20 @@ class FakeDetectionModel(DetectionModel):
         2: ClassLabel.VEHICLE,
     }
 
-    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[BoundingBox]]:
-        """Return per-frame bounding boxes."""
+    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[Prediction]]:
+        """Return per-frame predictions."""
         return [self._detect_single(frame) for frame in frames]
 
-    def _detect_single(self, data: npt.NDArray[np.uint8]) -> list[BoundingBox]:
+    def _detect_single(self, data: npt.NDArray[np.uint8]) -> list[Prediction]:
         num_rows = data.shape[0]
         return [
-            BoundingBox(
-                center_x=int(col),
-                center_y=int(num_rows - 1 - row),
-                width=1,
-                height=1,
+            Prediction(
+                bbox=BoundingBox(
+                    center_x=int(col),
+                    center_y=int(num_rows - 1 - row),
+                    width=1,
+                    height=1,
+                ),
                 confidence=0.5,
                 label=label,
             )
@@ -73,7 +75,11 @@ class ShouldMapBatchOutputToDetectionsCases:
         expected = [
             Detection(
                 frame_id=FRAME_ID_0,
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PERSON),
+                prediction=Prediction(
+                    bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
+                    confidence=0.5,
+                    label=ClassLabel.PERSON,
+                ),
             )
         ]
         return frames, expected
@@ -86,11 +92,19 @@ class ShouldMapBatchOutputToDetectionsCases:
         expected = [
             Detection(
                 frame_id=FRAME_ID_0,
-                bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.PERSON),
+                prediction=Prediction(
+                    bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
+                    confidence=0.5,
+                    label=ClassLabel.PERSON,
+                ),
             ),
             Detection(
                 frame_id=FRAME_ID_1,
-                bbox=BoundingBox(center_x=1, center_y=0, width=1, height=1, confidence=0.5, label=ClassLabel.VEHICLE),
+                prediction=Prediction(
+                    bbox=BoundingBox(center_x=1, center_y=0, width=1, height=1),
+                    confidence=0.5,
+                    label=ClassLabel.VEHICLE,
+                ),
             ),
         ]
         return frames, expected

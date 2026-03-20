@@ -11,7 +11,7 @@ from vigil.business_logic.controllers.pipeline_controller import PipelineControl
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_reader import VideoReader
-from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
 from vigil.business_logic.models.track import Track
 from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.detection_service import DetectionService
@@ -35,13 +35,17 @@ class StubVideoReader(VideoReader):
 
 
 class FakeDetectionModel(DetectionModel):
-    """Returns one fixed bbox per non-empty frame, no bbox for all-zero
-    frames."""
+    """Returns one fixed prediction per non-empty frame, no prediction for all-
+    zero frames."""
 
-    _PERSON_BBOX = BoundingBox(center_x=0, center_y=0, width=1, height=1, confidence=0.9, label=ClassLabel.PERSON)
+    _PERSON_PREDICTION = Prediction(
+        bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
+        confidence=0.9,
+        label=ClassLabel.PERSON,
+    )
 
-    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[BoundingBox]]:
-        return [[self._PERSON_BBOX] if frame.any() else [] for frame in frames]
+    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[Prediction]]:
+        return [[self._PERSON_PREDICTION] if frame.any() else [] for frame in frames]
 
 
 class SpyTracker(Tracker):

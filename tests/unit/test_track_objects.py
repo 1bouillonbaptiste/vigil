@@ -5,9 +5,9 @@ import pytest
 
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
-from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection
+from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
 from vigil.business_logic.models.frame import FrameId
-from vigil.business_logic.models.track import Track, TrackId
+from vigil.business_logic.models.track import Track
 from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
@@ -27,7 +27,7 @@ class FakeTracker(Tracker):
 
     @staticmethod
     def _is_a_match(track: Track, detection: Detection) -> bool:
-        return track.detections[-1].bbox == detection.bbox
+        return track.detections[-1].prediction.bbox == detection.prediction.bbox
 
 
 @dataclass
@@ -57,12 +57,12 @@ def this_context() -> ThisContext:
 def _detection(frame_id: FrameId, bbox: BoundingBox) -> Detection:
     return Detection(
         frame_id=frame_id,
-        bbox=bbox,
+        prediction=Prediction(bbox=bbox, confidence=0.5, label=ClassLabel.PERSON),
     )
 
 
-BBOX = BoundingBox(center_x=1, center_y=1, width=1, height=1, confidence=0.5, label=ClassLabel.PERSON)
-OTHER_BBOX = BoundingBox(center_x=99, center_y=99, width=10, height=10, confidence=0.5, label=ClassLabel.PERSON)
+BBOX = BoundingBox(center_x=1, center_y=1, width=1, height=1)
+OTHER_BBOX = BoundingBox(center_x=99, center_y=99, width=10, height=10)
 
 
 def test_should_store_detections_as_immutable_tuple(this_context: ThisContext):
@@ -87,7 +87,7 @@ def test_should_start_a_new_track_on_unmatched_detection(this_context: ThisConte
     # Then
     assert this_context.track_repository.list_open_tracks(VIDEO_ID) == [
         Track(
-            id=TrackId(UUID("4c683d38-d107-578d-b37f-728273126923")),
+            id=IdFactory.new_track_id(detection),
             video_id=VIDEO_ID,
             detections=(detection,),
         ),
@@ -108,7 +108,7 @@ def test_should_extend_a_track_on_matched_detection(this_context: ThisContext):
     # Then
     assert this_context.track_repository.list_open_tracks(VIDEO_ID) == [
         Track(
-            id=TrackId(UUID("86256341-ac07-565c-b467-e2075113077f")),
+            id=IdFactory.new_track_id(first_detection),
             video_id=VIDEO_ID,
             detections=(first_detection, second_detection),
         ),
@@ -170,10 +170,7 @@ def test_should_reset_grace_period_when_track_is_matched_again(this_context: Thi
 def test_should_not_mix_tracks_across_videos(this_context: ThisContext):
     # Given: a track belonging to another video
     other_video_id = UUID("ffffffff-0000-0000-0000-000000000000")
-    detection = Detection(
-        frame_id=OTHER_FRAME_ID,
-        bbox=BBOX,
-    )
+    detection = _detection(OTHER_FRAME_ID, BBOX)
     this_context.track_repository.save(
         Track(id=IdFactory.new_track_id(detection), video_id=other_video_id, detections=(detection,))
     )

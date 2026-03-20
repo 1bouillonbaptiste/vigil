@@ -24,12 +24,12 @@ class DetectionService:
         batch_results = self._model.detect(batch)
 
         detections: list[Detection] = []
-        for frame, bboxes in zip(frames, batch_results, strict=True):
-            for bbox in bboxes:
+        for frame, predictions in zip(frames, batch_results, strict=True):
+            for prediction in predictions:
                 detections.append(
                     Detection(
                         frame_id=frame.id,
-                        bbox=bbox,
+                        prediction=prediction,
                     )
                 )
         return detections
