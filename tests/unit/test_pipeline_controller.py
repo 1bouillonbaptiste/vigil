@@ -5,7 +5,6 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from vigil.adapters.secondary.in_memory_detection_store import InMemoryDetectionStore
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.controllers.pipeline_controller import PipelineController
@@ -61,7 +60,6 @@ class ThisContext:
 
     video_reader: StubVideoReader
     frame_repository: InMemoryFrameRepository
-    detection_store: InMemoryDetectionStore
     spy_tracker: SpyTracker
     controller: PipelineController
 
@@ -70,7 +68,6 @@ class ThisContext:
 def this_context() -> ThisContext:
     video_reader = StubVideoReader()
     frame_repository = InMemoryFrameRepository()
-    detection_store = InMemoryDetectionStore()
     track_repository = InMemoryTrackRepository()
     spy_tracker = SpyTracker()
     detection_service = DetectionService(model=FakeDetectionModel())
@@ -82,14 +79,12 @@ def this_context() -> ThisContext:
         video_reader=video_reader,
         frame_repository=frame_repository,
         detection_service=detection_service,
-        detection_store=detection_store,
         track_use_case=track_use_case,
         batch_size=2,
     )
     return ThisContext(
         video_reader=video_reader,
         frame_repository=frame_repository,
-        detection_store=detection_store,
         spy_tracker=spy_tracker,
         controller=controller,
     )
