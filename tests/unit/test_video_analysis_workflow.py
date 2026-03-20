@@ -19,7 +19,7 @@ from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
 
-SOURCE = VideoSource(uri="test-video")
+VIDEO_ID = IdFactory.new_video_id(VideoSource(uri="test-video"))
 
 
 class StubVideoReader(VideoReader):
@@ -31,7 +31,7 @@ class StubVideoReader(VideoReader):
     def add(self, data: npt.NDArray[np.uint8]) -> None:
         self._frames.append(data)
 
-    def read(self, source: VideoSource) -> Iterable[npt.NDArray[np.uint8]]:
+    def read(self, video_id: UUID) -> Iterable[npt.NDArray[np.uint8]]:
         return self._frames
 
 
@@ -96,25 +96,16 @@ def this_context() -> ThisContext:
     )
 
 
-def test_should_return_video_id(this_context: ThisContext) -> None:
-    # When
-    video_id = this_context.workflow.execute(SOURCE)
-
-    # Then
-    assert video_id == IdFactory.new_video_id(SOURCE)
-    assert isinstance(video_id, UUID)
-
-
 def test_should_store_all_frames(this_context: ThisContext) -> None:
     # Given
     this_context.video_reader.add(np.array([1], dtype=np.uint8))
     this_context.video_reader.add(np.array([2], dtype=np.uint8))
 
     # When
-    this_context.workflow.execute(SOURCE)
+    this_context.workflow.execute(VIDEO_ID)
 
     # Then
-    frames = this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE))
+    frames = this_context.frame_repository.get_by_video_id(VIDEO_ID)
     assert len(frames) == 2
     assert [f.position for f in frames] == [0, 1]
 
@@ -125,10 +116,10 @@ def test_should_track_frames_in_order(this_context: ThisContext) -> None:
     this_context.video_reader.add(np.array([1], dtype=np.uint8))
 
     # When
-    this_context.workflow.execute(SOURCE)
+    this_context.workflow.execute(VIDEO_ID)
 
     # Then: tracker called twice, frame 0 before frame 1
-    frames = this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE))
+    frames = this_context.frame_repository.get_by_video_id(VIDEO_ID)
     assert len(this_context.spy_tracker.called_with_detections) == 2
     assert this_context.spy_tracker.called_with_detections[0][0].frame_id == frames[0].id
     assert this_context.spy_tracker.called_with_detections[1][0].frame_id == frames[1].id
@@ -139,7 +130,7 @@ def test_should_flush_partial_batch(this_context: ThisContext) -> None:
     this_context.video_reader.add(np.array([1], dtype=np.uint8))
 
     # When
-    this_context.workflow.execute(SOURCE)
+    this_context.workflow.execute(VIDEO_ID)
 
     # Then: single frame was still tracked
     assert len(this_context.spy_tracker.called_with_detections) == 1
@@ -149,10 +140,10 @@ def test_should_handle_empty_video(this_context: ThisContext) -> None:
     # Given: no frames
 
     # When
-    this_context.workflow.execute(SOURCE)
+    this_context.workflow.execute(VIDEO_ID)
 
     # Then
-    assert this_context.frame_repository.get_by_video_id(IdFactory.new_video_id(SOURCE)) == []
+    assert this_context.frame_repository.get_by_video_id(VIDEO_ID) == []
     assert this_context.spy_tracker.called_with_detections == []
 
 
@@ -163,7 +154,7 @@ def test_should_run_detection_per_batch(this_context: ThisContext) -> None:
     this_context.video_reader.add(np.array([1], dtype=np.uint8))
 
     # When
-    this_context.workflow.execute(SOURCE)
+    this_context.workflow.execute(VIDEO_ID)
 
     # Then: tracker called once per frame (3 total across 2 flush rounds)
     assert len(this_context.spy_tracker.called_with_detections) == 3
