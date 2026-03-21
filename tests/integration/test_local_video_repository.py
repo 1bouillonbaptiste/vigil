@@ -1,0 +1,70 @@
+from pathlib import Path
+
+import cv2
+import numpy as np
+import pytest
+
+from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
+from vigil.business_logic.models.video_source import VideoSource
+from vigil.business_logic.services.id_factory import IdFactory
+
+
+@pytest.fixture(scope="function")
+def video_filepath(tmp_path: Path) -> Path:
+    """Write a minimal MP4 video to disk for testing."""
+    filepath = tmp_path / "video.mp4"
+    writer = cv2.VideoWriter(
+        filepath.as_posix(),
+        cv2.VideoWriter.fourcc(*"mp4v"),
+        fps=25,
+        frameSize=(64, 64),
+    )
+    n_frames = 10
+    for i in range(n_frames):
+        frame = np.full((64, 64, 3), i * 25, dtype=np.uint8)
+        writer.write(frame)
+    writer.release()
+
+    return filepath
+
+
+@pytest.fixture(scope="function")
+def repository(tmp_path: Path) -> LocalVideoRepository:
+    return LocalVideoRepository(storage_dir=tmp_path)
+
+
+def test_should_save_and_read_back_correct_frame_count(
+    repository: LocalVideoRepository,
+    video_filepath: Path,
+) -> None:
+    source = VideoSource(uri="clip.mp4")
+    repository.save(source, video_filepath.read_bytes())
+    video_id = IdFactory.new_video_id(source)
+
+    frames = list(repository.read(video_id))
+
+    assert len(frames) == 10
+
+
+def test_should_report_correct_frame_count(
+    repository: LocalVideoRepository,
+    video_filepath: Path,
+) -> None:
+    source = VideoSource(uri="clip.mp4")
+    repository.save(source, video_filepath.read_bytes())
+    video_id = IdFactory.new_video_id(source)
+
+    assert repository.frame_count(video_id) == 10
+
+
+def test_should_yield_numpy_arrays(
+    repository: LocalVideoRepository,
+    video_filepath: Path,
+) -> None:
+    source = VideoSource(uri="clip.mp4")
+    repository.save(source, video_filepath.read_bytes())
+    video_id = IdFactory.new_video_id(source)
+
+    frames = list(repository.read(video_id))
+
+    assert all(isinstance(f, np.ndarray) for f in frames)
