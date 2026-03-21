@@ -30,7 +30,15 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="vigil", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="Vigil",
+    version="1.0.0",
+    description=(
+        "Video scene understanding API. "
+        "Submit a video to detect and track objects across frames. "
+    ),
+    lifespan=lifespan,
+)
 
 app.include_router(video_analysis.router)
 
