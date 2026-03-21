@@ -33,3 +33,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="vigil", version="1.0.0", lifespan=lifespan)
 
 app.include_router(video_analysis.router)
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)  # noqa: S104
