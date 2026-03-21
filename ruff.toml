@@ -13,6 +13,7 @@ select = [
     "RUF", # specific ruff rules
 ]
 ignore = [
+    "B008", # function calls as default, usefull for fastapi Depends(...)
     "D100",  # Missing docstring in public module
     "D104",  # Missing docstring in public package
     "D107",  # Missing docstring in classes `__init__`
