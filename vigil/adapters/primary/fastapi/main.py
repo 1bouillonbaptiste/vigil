@@ -33,10 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Vigil",
     version="1.0.0",
-    description=(
-        "Video scene understanding API. "
-        "Submit a video to detect and track objects across frames. "
-    ),
+    description=("Video scene understanding API. Submit a video to detect and track objects across frames. "),
     lifespan=lifespan,
 )
 
