@@ -16,6 +16,9 @@ uvicorn = "^0.42.0"
 httpx = "^0.28.1"
 python-multipart = "^0.0.22"
 ultralytics = ">=8.3,<9"
+streamlit = "^1.55.0"
+imageio = "^2.37.3"
+imageio-ffmpeg = "^0.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
