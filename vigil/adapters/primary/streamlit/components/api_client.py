@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
@@ -15,11 +15,22 @@ from vigil.adapters.primary.streamlit.components.models import (
     VideoStatus,
 )
 
+# (filename, data, content-type)
+_UploadFile = tuple[str, bytes, str]
+_RequestFiles = dict[str, _UploadFile]
+
+
+@runtime_checkable
+class _HttpTransport(Protocol):
+    """Minimal interface required by VigilClient to send HTTP requests."""
+
+    def request(self, method: str, url: str | httpx.URL, **kwargs: Any) -> httpx.Response: ...
+
 
 class VigilClient:
     """HTTP client for the Vigil backend API."""
 
-    def __init__(self, client: httpx.Client) -> None:
+    def __init__(self, client: _HttpTransport) -> None:
         self._client = client
 
     @classmethod
@@ -27,10 +38,10 @@ class VigilClient:
         """Build a client pointed at the configured backend URL."""
         return cls(httpx.Client(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT))
 
-    def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+    def _request(self, method: str, url: str, *, files: _RequestFiles | None = None) -> httpx.Response:
         """Send a request and translate httpx errors into Vigil exceptions."""
         try:
-            response = self._client.request(method, url, **kwargs)
+            response = self._client.request(method, url, files=files)
             response.raise_for_status()
             return response
         except httpx.ConnectError as error:
