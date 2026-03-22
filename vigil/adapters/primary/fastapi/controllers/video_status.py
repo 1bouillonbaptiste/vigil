@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from vigil.adapters.primary.fastapi.app_dependencies import get_analysis_status_use_case
+from vigil.business_logic.exceptions import VideoNotFoundError
 
 router = APIRouter(tags=["videos"])
 
@@ -38,7 +39,7 @@ def get_video_status(
     """Return the analysis progress for the given video."""
     try:
         analysis = use_case.execute(video_id=video_id)
-    except KeyError as err:
+    except VideoNotFoundError as err:
         raise HTTPException(status_code=404, detail="Video not found.") from err
 
     return VideoStatusResponse(

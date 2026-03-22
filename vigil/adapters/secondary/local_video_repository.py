@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
+from vigil.business_logic.exceptions import VideoNotFoundError
 from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.id_factory import IdFactory
 
@@ -26,6 +27,8 @@ class LocalVideoRepository:
 
     def read(self, video_id: UUID) -> Iterator[npt.NDArray[np.uint8]]:
         """Yield frames from the stored video in position order."""
+        if video_id not in self._paths:
+            raise VideoNotFoundError(video_id)
         cap = cv2.VideoCapture(str(self._paths[video_id]))
         try:
             while True:
@@ -38,6 +41,8 @@ class LocalVideoRepository:
 
     def frame_count(self, video_id: UUID) -> int:
         """Return the total number of frames in the stored video."""
+        if video_id not in self._paths:
+            raise VideoNotFoundError(video_id)
         cap = cv2.VideoCapture(str(self._paths[video_id]))
         count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()

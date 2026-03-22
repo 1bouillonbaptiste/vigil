@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
+from vigil.business_logic.exceptions import VideoNotFoundError
 from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.id_factory import IdFactory
 
@@ -55,6 +56,16 @@ def test_should_report_correct_frame_count(
     video_id = IdFactory.new_video_id(source)
 
     assert repository.frame_count(video_id) == 10
+
+
+def test_read_raises_video_not_found_for_unknown_id(repository: LocalVideoRepository) -> None:
+    with pytest.raises(VideoNotFoundError):
+        list(repository.read(IdFactory.new_video_id(VideoSource(uri="unknown.mp4"))))
+
+
+def test_frame_count_raises_video_not_found_for_unknown_id(repository: LocalVideoRepository) -> None:
+    with pytest.raises(VideoNotFoundError):
+        repository.frame_count(IdFactory.new_video_id(VideoSource(uri="unknown.mp4")))
 
 
 def test_should_yield_numpy_arrays(
