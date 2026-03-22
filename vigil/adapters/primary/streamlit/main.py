@@ -1,4 +1,5 @@
 import contextlib
+from dataclasses import replace
 from pathlib import Path
 
 import streamlit as st
@@ -80,14 +81,16 @@ def _status_poller() -> None:
 
     Renders no visible widgets — side-effects only.
     """
-    for entry in st.session_state.get("videos", {}).values():
+    for video_id, entry in st.session_state.get("videos", {}).items():
         if entry.status is not None and entry.status.is_complete:
             continue
         previous = entry.status.analysed_frames if entry.status else -1
+        new_status = entry.status
         with contextlib.suppress(VigilAPIError):
-            entry.status = client.get_status(entry.video_id)
-        current = entry.status.analysed_frames if entry.status else -1
+            new_status = client.get_status(entry.video_id)
+        current = new_status.analysed_frames if new_status else -1
         if current != previous:
+            st.session_state.videos[video_id] = replace(entry, status=new_status)
             st.rerun()
 
 
