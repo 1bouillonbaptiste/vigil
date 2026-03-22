@@ -1,3 +1,5 @@
+from typing import Any
+
 import httpx
 
 from vigil.adapters.primary.streamlit.components.config import API_BASE_URL, REQUEST_TIMEOUT
@@ -14,59 +16,50 @@ from vigil.adapters.primary.streamlit.components.models import (
 )
 
 
-def _make_client() -> httpx.Client:
-    return httpx.Client(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT)
+class VigilClient:
+    """HTTP client for the Vigil backend API."""
 
+    def __init__(self, client: httpx.Client) -> None:
+        self._client = client
 
-def upload_video(name: str, data: bytes, *, client: httpx.Client | None = None) -> str:
-    """Upload a video file to the backend and return the video_id."""
-    _client = client or _make_client()
-    try:
-        response = _client.post(
-            "/analyze-video",
-            files={"file": (name, data, "video/mp4")},
-        )
-        response.raise_for_status()
+    @classmethod
+    def default(cls) -> "VigilClient":
+        """Build a client pointed at the configured backend URL."""
+        return cls(httpx.Client(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT))
+
+    def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        """Send a request and translate httpx errors into Vigil exceptions."""
+        try:
+            response = self._client.request(method, url, **kwargs)
+            response.raise_for_status()
+            return response
+        except httpx.ConnectError as error:
+            raise VigilConnectionError("Cannot reach the Vigil API. Is the backend running?") from error
+        except httpx.TimeoutException as error:
+            raise VigilAPIError("Request timed out.") from error
+        except httpx.HTTPStatusError as error:
+            if error.response.status_code == 404:
+                raise VigilNotFoundError(f"Resource not found: {url}") from error
+            detail = error.response.json().get("detail", str(error))
+            raise VigilAPIError(f"Request failed ({error.response.status_code}): {detail}") from error
+
+    def upload_video(self, name: str, data: bytes) -> str:
+        """Upload a video file to the backend and return the video_id."""
+        response = self._request("POST", "/analyze-video", files={"file": (name, data, "video/mp4")})
         return response.json()["video_id"]
-    except httpx.ConnectError as error:
-        raise VigilConnectionError("Cannot reach the Vigil API. Is the backend running?") from error
-    except httpx.TimeoutException as error:
-        raise VigilAPIError("Upload request timed out.") from error
-    except httpx.HTTPStatusError as error:
-        detail = error.response.json().get("detail", str(error))
-        raise VigilAPIError(f"Upload failed ({error.response.status_code}): {detail}") from error
 
-
-def get_status(video_id: str, *, client: httpx.Client | None = None) -> VideoStatus:
-    """Fetch the current analysis status for a video."""
-    _client = client or _make_client()
-    try:
-        response = _client.get(f"/videos/{video_id}/status")
-        response.raise_for_status()
-        payload = response.json()
+    def get_status(self, video_id: str) -> VideoStatus:
+        """Fetch the current analysis status for a video."""
+        payload = self._request("GET", f"/videos/{video_id}/status").json()
         return VideoStatus(
             video_id=payload["video_id"],
             analysed_frames=payload["analysed_frames"],
             total_frames=payload["total_frames"],
         )
-    except httpx.ConnectError as error:
-        raise VigilConnectionError("Cannot reach the Vigil API. Is the backend running?") from error
-    except httpx.TimeoutException as error:
-        raise VigilAPIError("Status request timed out.") from error
-    except httpx.HTTPStatusError as error:
-        if error.response.status_code == 404:
-            raise VigilNotFoundError(f"Video {video_id} not found.") from error
-        detail = error.response.json().get("detail", str(error))
-        raise VigilAPIError(f"Status check failed ({error.response.status_code}): {detail}") from error
 
-
-def get_tracks(video_id: str, *, client: httpx.Client | None = None) -> list[TrackData]:
-    """Retrieve all object tracks for a processed video."""
-    _client = client or _make_client()
-    try:
-        response = _client.get(f"/videos/{video_id}/tracks")
-        response.raise_for_status()
-        payload = response.json()
+    def get_tracks(self, video_id: str) -> list[TrackData]:
+        """Retrieve all object tracks for a processed video."""
+        payload = self._request("GET", f"/videos/{video_id}/tracks").json()
         return [
             TrackData(
                 id=track["id"],
@@ -88,12 +81,3 @@ def get_tracks(video_id: str, *, client: httpx.Client | None = None) -> list[Tra
             )
             for track in payload["tracks"]
         ]
-    except httpx.ConnectError as error:
-        raise VigilConnectionError("Cannot reach the Vigil API. Is the backend running?") from error
-    except httpx.TimeoutException as error:
-        raise VigilAPIError("Tracks request timed out.") from error
-    except httpx.HTTPStatusError as error:
-        if error.response.status_code == 404:
-            raise VigilNotFoundError(f"Video {video_id} not found.") from error
-        detail = error.response.json().get("detail", str(error))
-        raise VigilAPIError(f"Tracks retrieval failed ({error.response.status_code}): {detail}") from error
