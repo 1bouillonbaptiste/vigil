@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -8,7 +9,8 @@ from vigil.adapters.primary.fastapi.app_dependencies import get_video_tracks_use
 router = APIRouter(tags=["videos"])
 
 
-class BoundingBoxResponse(BaseModel):
+@dataclass
+class BoundingBoxResponse:
     """Serialised bounding box for an API response."""
 
     center_x: int
@@ -17,7 +19,8 @@ class BoundingBoxResponse(BaseModel):
     height: int
 
 
-class DetectionResponse(BaseModel):
+@dataclass
+class DetectionResponse:
     """Serialised detection for an API response."""
 
     frame_id: UUID
@@ -26,7 +29,8 @@ class DetectionResponse(BaseModel):
     bbox: BoundingBoxResponse
 
 
-class TrackResponse(BaseModel):
+@dataclass
+class TrackResponse:
     """Serialised track for an API response."""
 
     id: UUID
