@@ -43,8 +43,8 @@ def vigil_client(tmp_path: Path) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture(scope="function")
-def video_bytes(tmp_path: Path) -> bytes:
-    """Minimal 10-frame 64x64 MP4 video as raw bytes."""
+def video_path(tmp_path: Path) -> Path:
+    """Minimal 10-frame 64x64 MP4 video written to a temp file."""
     filepath = tmp_path / "clip.mp4"
     writer = cv2.VideoWriter(
         filepath.as_posix(),
@@ -55,4 +55,10 @@ def video_bytes(tmp_path: Path) -> bytes:
     for i in range(_VIDEO_FRAMES):
         writer.write(np.full((*_VIDEO_SIZE[::-1], 3), i * 25, dtype=np.uint8))
     writer.release()
-    return filepath.read_bytes()
+    return filepath
+
+
+@pytest.fixture(scope="function")
+def video_bytes(video_path: Path) -> bytes:
+    """Minimal 10-frame 64x64 MP4 video as raw bytes."""
+    return video_path.read_bytes()

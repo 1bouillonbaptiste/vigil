@@ -1,4 +1,5 @@
 import contextlib
+import tempfile
 from dataclasses import replace
 from pathlib import Path
 
@@ -48,7 +49,11 @@ def _handle_upload(uploaded_file) -> None:
         st.error(str(error))
         return
 
-    st.session_state.videos[video_id] = VideoEntry(video_id=video_id, name=uploaded_file.name, file_bytes=file_bytes)
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+        tmp.write(file_bytes)
+        file_path = Path(tmp.name)
+
+    st.session_state.videos[video_id] = VideoEntry(video_id=video_id, name=uploaded_file.name, file_path=file_path)
 
 
 def _handle_display() -> None:
@@ -61,7 +66,7 @@ def _handle_display() -> None:
 
     try:
         tracks = client.get_tracks(video_id)
-        rendered_path = render_video_with_tracks(video_bytes=entry.file_bytes, tracks=tracks)
+        rendered_path = render_video_with_tracks(video_path=entry.file_path, tracks=tracks)
     except VigilAPIError as error:
         st.error(str(error))
         return

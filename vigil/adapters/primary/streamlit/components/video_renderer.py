@@ -1,4 +1,3 @@
-import tempfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -58,19 +57,17 @@ def _draw_detections(frame: np.ndarray, detections: list[DetectionData]) -> np.n
     return output
 
 
-def render_video_with_tracks(video_bytes: bytes, tracks: list[TrackData]) -> Path:
+def render_video_with_tracks(video_path: Path, tracks: list[TrackData]) -> Path:
     """Render a video with bounding boxes drawn for each tracked object.
 
     Writes the annotated video to a temporary file and returns its path. The
     caller is responsible for cleaning up the file when done.
     """
+    import tempfile
+
     frame_detections = _build_frame_detections(tracks)
 
-    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as input_file:
-        input_file.write(video_bytes)
-        input_path = input_file.name
-
-    cap = cv2.VideoCapture(input_path)
+    cap = cv2.VideoCapture(str(video_path))
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
 
     with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as output_tmp:
@@ -97,6 +94,5 @@ def render_video_with_tracks(video_bytes: bytes, tracks: list[TrackData]) -> Pat
 
     cap.release()
     writer.close()
-    Path(input_path).unlink(missing_ok=True)
 
     return Path(output_path)

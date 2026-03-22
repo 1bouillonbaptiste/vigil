@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -50,5 +51,5 @@ class VideoEntry:
 
     video_id: str
     name: str
-    file_bytes: bytes
+    file_path: Path
     status: VideoStatus | None = field(default=None)
