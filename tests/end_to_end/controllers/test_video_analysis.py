@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from pathlib import Path
 
+import pytest
 from starlette.testclient import TestClient
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
@@ -18,7 +20,16 @@ from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.id_factory import IdFactory
 
 
-def test_can_save_a_video(fastapi_client: TestClient, tmp_path: Path, video_filepath: Path):
+@dataclass
+class ThisContext:
+    """Context for testing vidoe analysis controller."""
+
+    track_repository: InMemoryTrackRepository
+    client: TestClient
+
+
+@pytest.fixture(scope="function")
+def this_context(fastapi_client: TestClient, tmp_path: Path) -> ThisContext:
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
     detection_model = FakeDetectionModel()
@@ -31,28 +42,24 @@ def test_can_save_a_video(fastapi_client: TestClient, tmp_path: Path, video_file
     fastapi_client.app.dependency_overrides[_get_detection_model] = lambda: detection_model  # type: ignore
     fastapi_client.app.dependency_overrides[_get_tracker] = lambda: tracker  # type: ignore
 
-    with open(video_filepath, "rb") as file:
-        response = fastapi_client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
+    return ThisContext(track_repository=track_repository, client=fastapi_client)
 
+
+def test_can_save_a_video(this_context: ThisContext, video_filepath: Path):
+    # When
+    with open(video_filepath, "rb") as file:
+        response = this_context.client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
+
+    # Then
     assert response.status_code == 202
     expected_video_id = IdFactory.new_video_id(VideoSource(uri="video.mp4"))
     assert response.json() == {"video_id": str(expected_video_id)}
 
 
-def test_analysis_saves_tracks_in_repository(fastapi_client: TestClient, tmp_path: Path, video_filepath: Path):
-    video_repository = LocalVideoRepository(storage_dir=tmp_path)
-    frame_repository = InMemoryFrameRepository()
-    detection_model = FakeDetectionModel()
-    track_repository = InMemoryTrackRepository()
-    tracker = FakeTracker()
-
-    fastapi_client.app.dependency_overrides[_get_video_repository] = lambda: video_repository  # type: ignore
-    fastapi_client.app.dependency_overrides[_get_frame_repository] = lambda: frame_repository  # type: ignore
-    fastapi_client.app.dependency_overrides[_get_track_repository] = lambda: track_repository  # type: ignore
-    fastapi_client.app.dependency_overrides[_get_detection_model] = lambda: detection_model  # type: ignore
-    fastapi_client.app.dependency_overrides[_get_tracker] = lambda: tracker  # type: ignore
-
+def test_analysis_saves_tracks_in_repository(this_context: ThisContext, video_filepath: Path):
+    # When
     with open(video_filepath, "rb") as file:
-        fastapi_client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
+        this_context.client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
-    assert len(track_repository.list_all()) == 1
+    # Then
+    assert len(this_context.track_repository.list_all()) == 1

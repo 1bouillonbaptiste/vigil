@@ -8,12 +8,12 @@ from starlette.testclient import TestClient
 from vigil.adapters.primary.fastapi.main import app
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def fastapi_client() -> TestClient:
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def video_filepath(tmp_path: Path) -> Path:
     """Generate a 10-frame MP4 video in a temporary directory."""
     filepath = tmp_path / "video.mp4"
