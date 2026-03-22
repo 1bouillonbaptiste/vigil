@@ -1,4 +1,4 @@
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import httpx
 
@@ -24,7 +24,13 @@ _RequestFiles = dict[str, _UploadFile]
 class _HttpTransport(Protocol):
     """Minimal interface required by VigilClient to send HTTP requests."""
 
-    def request(self, method: str, url: str | httpx.URL, **kwargs: Any) -> httpx.Response: ...
+    def request(
+        self,
+        method: str,
+        url: str | httpx.URL,
+        *,
+        files: _RequestFiles | None = None,
+    ) -> httpx.Response: ...
 
 
 class VigilClient:
