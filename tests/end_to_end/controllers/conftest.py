@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from pathlib import Path
 
 import cv2
@@ -9,8 +10,9 @@ from vigil.adapters.primary.fastapi.main import app
 
 
 @pytest.fixture(scope="function")
-def fastapi_client() -> TestClient:
-    return TestClient(app)
+def fastapi_client() -> Generator[TestClient, None, None]:
+    yield TestClient(app)
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")
