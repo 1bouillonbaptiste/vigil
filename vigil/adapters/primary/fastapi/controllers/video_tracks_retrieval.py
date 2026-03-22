@@ -4,7 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from vigil.adapters.primary.fastapi.app_dependencies import get_video_tracks_use_case
+from vigil.adapters.primary.fastapi.app_dependencies import (
+    _get_frame_repository,
+    get_video_tracks_use_case,
+)
 
 router = APIRouter(tags=["videos"])
 
@@ -23,7 +26,7 @@ class BoundingBoxResponse:
 class DetectionResponse:
     """Serialised detection for an API response."""
 
-    frame_id: UUID
+    frame_position: int
     label: str
     confidence: float
     bbox: BoundingBoxResponse
@@ -55,6 +58,7 @@ class GetVideoTracksResponse(BaseModel):
 def get_video_tracks(
     video_id: UUID,
     use_case=Depends(get_video_tracks_use_case),
+    frame_repository=Depends(_get_frame_repository),
 ) -> GetVideoTracksResponse:
     """Return all tracks (open and closed) for the given video."""
     tracks = use_case.execute(video_id=video_id)
@@ -66,7 +70,7 @@ def get_video_tracks(
                 closed=track.closed,
                 detections=[
                     DetectionResponse(
-                        frame_id=detection.frame_id,
+                        frame_position=frame_repository.get_by_id(detection.frame_id).position,
                         label=detection.prediction.label,
                         confidence=detection.prediction.confidence,
                         bbox=BoundingBoxResponse(

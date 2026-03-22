@@ -18,12 +18,25 @@ class LocalVideoRepository:
 
     storage_dir: Path
     _paths: dict[UUID, Path] = field(default_factory=dict, init=False)
+    _frame_counts: dict[UUID, int] = field(default_factory=dict, init=False)
 
     def save(self, source: VideoSource, data: bytes) -> None:
-        """Write raw video bytes to disk."""
+        """Write raw video bytes to disk and cache the exact frame count."""
         path = self.storage_dir / source.uri
         path.write_bytes(data)
-        self._paths[IdFactory.new_video_id(source)] = path
+        video_id = IdFactory.new_video_id(source)
+        self._paths[video_id] = path
+        self._frame_counts[video_id] = self._count_frames(path)
+
+    @staticmethod
+    def _count_frames(path: Path) -> int:
+        """Count frames by grabbing without decoding."""
+        cap = cv2.VideoCapture(str(path))
+        count = 0
+        while cap.grab():
+            count += 1
+        cap.release()
+        return count
 
     def read(self, video_id: UUID) -> Iterator[npt.NDArray[np.uint8]]:
         """Yield frames from the stored video in position order."""
@@ -43,7 +56,4 @@ class LocalVideoRepository:
         """Return the total number of frames in the stored video."""
         if video_id not in self._paths:
             raise VideoNotFoundError(video_id)
-        cap = cv2.VideoCapture(str(self._paths[video_id]))
-        count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        cap.release()
-        return count
+        return self._frame_counts[video_id]
