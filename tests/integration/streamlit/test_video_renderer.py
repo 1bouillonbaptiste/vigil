@@ -1,0 +1,74 @@
+from dataclasses import replace
+
+import cv2
+from starlette.testclient import TestClient
+
+from vigil.adapters.primary.streamlit.components.api_client import get_tracks, upload_video
+from vigil.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
+from vigil.adapters.primary.streamlit.components.video_renderer import render_video_with_tracks
+
+
+def make_detection(**overrides) -> DetectionData:
+    defaults = DetectionData(
+        frame_position=0,
+        label="person",
+        confidence=0.9,
+        bbox=BoundingBox(center_x=32, center_y=32, width=20, height=20),
+    )
+    return replace(defaults, **overrides)
+
+
+def make_track(**overrides) -> TrackData:
+    defaults = TrackData(id="track-1", closed=True, detections=(make_detection(),))
+    return replace(defaults, **overrides)
+
+
+def test_renders_a_readable_mp4_file(video_bytes: bytes) -> None:
+    output = render_video_with_tracks(video_bytes, tracks=[])
+
+    cap = cv2.VideoCapture(str(output))
+    assert cap.isOpened()
+    cap.release()
+    output.unlink(missing_ok=True)
+
+
+def test_output_has_same_frame_count_as_input(video_bytes: bytes) -> None:
+    output = render_video_with_tracks(video_bytes, tracks=[])
+
+    cap = cv2.VideoCapture(str(output))
+    frame_count = 0
+    while cap.read()[0]:
+        frame_count += 1
+    cap.release()
+    output.unlink(missing_ok=True)
+
+    assert frame_count == 10
+
+
+def test_renders_without_error_when_detections_span_all_frames(video_bytes: bytes) -> None:
+    tracks = [
+        make_track(
+            detections=tuple(make_detection(frame_position=i) for i in range(10)),
+        )
+    ]
+
+    output = render_video_with_tracks(video_bytes, tracks=tracks)
+
+    assert output.exists()
+    output.unlink(missing_ok=True)
+
+
+def test_renders_bboxes_from_real_analysis(vigil_client: TestClient, video_bytes: bytes) -> None:
+    video_id = upload_video("clip.mp4", video_bytes, client=vigil_client)
+    tracks = get_tracks(video_id, client=vigil_client)
+
+    output = render_video_with_tracks(video_bytes, tracks=tracks)
+
+    cap = cv2.VideoCapture(str(output))
+    frame_count = 0
+    while cap.read()[0]:
+        frame_count += 1
+    cap.release()
+    output.unlink(missing_ok=True)
+
+    assert frame_count == 10
