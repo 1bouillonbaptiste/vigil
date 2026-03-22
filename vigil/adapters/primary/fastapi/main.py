@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from vigil.adapters.primary.fastapi.controllers import video_analysis, video_tracks_retrieval
+from vigil.adapters.primary.fastapi.controllers import video_analysis, video_status, video_tracks_retrieval
 from vigil.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.adapters.secondary.fake_tracker import FakeTracker
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
@@ -38,6 +38,7 @@ app = FastAPI(
 )
 
 app.include_router(video_analysis.router)
+app.include_router(video_status.router)
 app.include_router(video_tracks_retrieval.router)
 
 if __name__ == "__main__":

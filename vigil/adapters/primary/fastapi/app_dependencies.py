@@ -7,6 +7,7 @@ from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.services.detection_service import DetectionService
+from vigil.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
 from vigil.business_logic.use_cases.save_video import SaveVideoUseCase
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
@@ -35,6 +36,14 @@ def _get_tracker(request: Request) -> Tracker:
 
 def _build_detection_service(detection_model=Depends(_get_detection_model)) -> DetectionService:
     return DetectionService(model=detection_model)
+
+
+def get_analysis_status_use_case(
+    frame_repository=Depends(_get_frame_repository),
+    video_repository=Depends(_get_video_repository),
+) -> GetAnalysisStatusUseCase:
+    """Get the `GetAnalysisStatusUseCase`."""
+    return GetAnalysisStatusUseCase(frame_repository=frame_repository, video_repository=video_repository)
 
 
 def get_save_video_use_case(
