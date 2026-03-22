@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from vigil.business_logic.gateways.frame_repository import FrameRepository
-from vigil.business_logic.gateways.video_reader import VideoReader
+from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame import Frame
 from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.services.id_factory import IdFactory
@@ -16,13 +16,13 @@ class VideoAnalysisWorkflow:
 
     def __init__(
         self,
-        video_reader: VideoReader,
+        video_repository: VideoRepository,
         frame_repository: FrameRepository,
         detection_service: DetectionService,
         track_use_case: TrackObjectsUseCase,
         batch_size: int,
     ) -> None:
-        self._video_reader = video_reader
+        self._video_repository = video_repository
         self._frame_repository = frame_repository
         self._detection_service = detection_service
         self._track_use_case = track_use_case
@@ -32,7 +32,7 @@ class VideoAnalysisWorkflow:
         """Run the pipeline for the given video."""
         batch: list[Frame] = []
 
-        for position, data in enumerate(self._video_reader.read(video_id)):
+        for position, data in enumerate(self._video_repository.read(video_id)):
             frame = Frame(
                 id=IdFactory.new_frame_id(video_id=video_id, position=position),
                 video_id=video_id,

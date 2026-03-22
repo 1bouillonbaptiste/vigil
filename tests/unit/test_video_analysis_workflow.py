@@ -10,7 +10,7 @@ from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRep
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.gateways.tracker import Tracker
-from vigil.business_logic.gateways.video_reader import VideoReader
+from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
 from vigil.business_logic.models.track import Track
 from vigil.business_logic.models.video_source import VideoSource
@@ -22,14 +22,17 @@ from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysis
 VIDEO_ID = IdFactory.new_video_id(VideoSource(uri="test-video"))
 
 
-class StubVideoReader(VideoReader):
-    """Controllable video reader for tests."""
+class StubVideoRepository(VideoRepository):
+    """Controllable video repository for tests."""
 
     def __init__(self) -> None:
         self._frames: list[npt.NDArray[np.uint8]] = []
 
     def add(self, data: npt.NDArray[np.uint8]) -> None:
         self._frames.append(data)
+
+    def save(self, source: VideoSource, data: bytes) -> None:
+        pass
 
     def read(self, video_id: UUID) -> Iterable[npt.NDArray[np.uint8]]:
         return self._frames
@@ -67,7 +70,7 @@ class SpyTracker(Tracker):
 class ThisContext:
     """Context for testing VideoAnalysisWorkflow."""
 
-    video_reader: StubVideoReader
+    video_repository: StubVideoRepository
     frame_repository: InMemoryFrameRepository
     spy_tracker: SpyTracker
     workflow: VideoAnalysisWorkflow
@@ -75,7 +78,7 @@ class ThisContext:
 
 @pytest.fixture(scope="function")
 def this_context() -> ThisContext:
-    video_reader = StubVideoReader()
+    video_repository = StubVideoRepository()
     frame_repository = InMemoryFrameRepository()
     track_repository = InMemoryTrackRepository()
     spy_tracker = SpyTracker()
@@ -85,14 +88,14 @@ def this_context() -> ThisContext:
         tracker=spy_tracker,
     )
     workflow = VideoAnalysisWorkflow(
-        video_reader=video_reader,
+        video_repository=video_repository,
         frame_repository=frame_repository,
         detection_service=detection_service,
         track_use_case=track_use_case,
         batch_size=2,
     )
     return ThisContext(
-        video_reader=video_reader,
+        video_repository=video_repository,
         frame_repository=frame_repository,
         spy_tracker=spy_tracker,
         workflow=workflow,
@@ -101,8 +104,8 @@ def this_context() -> ThisContext:
 
 def test_should_store_all_frames(this_context: ThisContext) -> None:
     # Given
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
-    this_context.video_reader.add(np.array([2], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([2], dtype=np.uint8))
 
     # When
     this_context.workflow.execute(VIDEO_ID)
@@ -115,8 +118,8 @@ def test_should_store_all_frames(this_context: ThisContext) -> None:
 
 def test_should_track_frames_in_order(this_context: ThisContext) -> None:
     # Given
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
 
     # When
     this_context.workflow.execute(VIDEO_ID)
@@ -130,7 +133,7 @@ def test_should_track_frames_in_order(this_context: ThisContext) -> None:
 
 def test_should_flush_partial_batch(this_context: ThisContext) -> None:
     # Given: batch_size=2 but only 1 frame
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
 
     # When
     this_context.workflow.execute(VIDEO_ID)
@@ -152,9 +155,9 @@ def test_should_handle_empty_video(this_context: ThisContext) -> None:
 
 def test_should_run_detection_per_batch(this_context: ThisContext) -> None:
     # Given: 3 frames with batch_size=2 → one full batch + one partial
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
-    this_context.video_reader.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
 
     # When
     this_context.workflow.execute(VIDEO_ID)
