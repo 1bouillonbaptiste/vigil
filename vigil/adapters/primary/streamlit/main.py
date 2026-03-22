@@ -4,7 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from vigil.adapters.primary.streamlit.components.api_client import VigilClient
-from vigil.adapters.primary.streamlit.components.exceptions import VigilAPIError, VigilConnectionError
+from vigil.adapters.primary.streamlit.components.exceptions import VigilAPIError
 from vigil.adapters.primary.streamlit.components.models import VideoEntry, VideoStatus
 from vigil.adapters.primary.streamlit.components.video_renderer import render_video_with_tracks
 
@@ -43,9 +43,6 @@ def _handle_upload(uploaded_file) -> None:
     file_bytes = uploaded_file.read()
     try:
         video_id = client.upload_video(name=uploaded_file.name, data=file_bytes)
-    except VigilConnectionError as error:
-        st.error(str(error))
-        return
     except VigilAPIError as error:
         st.error(str(error))
         return
