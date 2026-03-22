@@ -1,38 +1,21 @@
-from typing import Protocol, runtime_checkable
+from typing import Any
 
 import httpx
 
-from vigil.adapters.primary.streamlit.components._mappers import tracks_from_payload, video_status_from_payload
 from vigil.adapters.primary.streamlit.components.config import API_BASE_URL, REQUEST_TIMEOUT
 from vigil.adapters.primary.streamlit.components.exceptions import (
     VigilAPIError,
     VigilConnectionError,
     VigilNotFoundError,
 )
+from vigil.adapters.primary.streamlit.components.mappers import tracks_from_payload, video_status_from_payload
 from vigil.adapters.primary.streamlit.components.models import TrackData, VideoStatus
-
-# (filename, data, content-type)
-_UploadFile = tuple[str, bytes, str]
-_RequestFiles = dict[str, _UploadFile]
-
-
-@runtime_checkable
-class _HttpTransport(Protocol):
-    """Minimal interface required by VigilClient to send HTTP requests."""
-
-    def request(
-        self,
-        method: str,
-        url: str | httpx.URL,
-        *,
-        files: _RequestFiles | None = None,
-    ) -> httpx.Response: ...
 
 
 class VigilClient:
     """HTTP client for the Vigil backend API."""
 
-    def __init__(self, client: _HttpTransport) -> None:
+    def __init__(self, client: httpx.Client) -> None:
         self._client = client
 
     @classmethod
@@ -40,10 +23,10 @@ class VigilClient:
         """Build a client pointed at the configured backend URL."""
         return cls(httpx.Client(base_url=API_BASE_URL, timeout=REQUEST_TIMEOUT))
 
-    def _request(self, method: str, url: str, *, files: _RequestFiles | None = None) -> httpx.Response:
+    def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         """Send a request and translate httpx errors into Vigil exceptions."""
         try:
-            response = self._client.request(method, url, files=files)
+            response = self._client.request(method, url, **kwargs)
             response.raise_for_status()
             return response
         except httpx.ConnectError as error:

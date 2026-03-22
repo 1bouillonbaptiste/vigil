@@ -64,8 +64,7 @@ def test_get_tracks_frame_positions_cover_all_frames(vigil_client: TestClient, v
     assert positions == set(range(10))
 
 
-def test_get_tracks_raises_not_found_for_unknown_video(vigil_client: TestClient) -> None:
+def test_get_tracks_returns_empty_list_for_unknown_video(vigil_client: TestClient) -> None:
     client = VigilClient(vigil_client)
 
-    with pytest.raises(VigilNotFoundError):
-        client.get_tracks(str(uuid.uuid4()))
+    assert client.get_tracks(str(uuid.uuid4())) == []

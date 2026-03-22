@@ -1,7 +1,6 @@
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
 
 import cv2
 import numpy as np
@@ -67,28 +66,18 @@ def video_bytes(video_path: Path) -> bytes:
     return video_path.read_bytes()
 
 
-@pytest.fixture()
-def make_detection() -> Callable[..., DetectionData]:
+def make_detection(**overrides) -> DetectionData:
     """Factory for DetectionData with sensible defaults."""
-
-    def _make(**overrides: Any) -> DetectionData:
-        defaults = DetectionData(
-            frame_position=0,
-            label="person",
-            confidence=0.9,
-            bbox=BoundingBox(center_x=32, center_y=32, width=20, height=20),
-        )
-        return replace(defaults, **overrides)
-
-    return _make
+    defaults = DetectionData(
+        frame_position=0,
+        label="person",
+        confidence=0.9,
+        bbox=BoundingBox(center_x=32, center_y=32, width=20, height=20),
+    )
+    return replace(defaults, **overrides)
 
 
-@pytest.fixture()
-def make_track(make_detection: Callable[..., DetectionData]) -> Callable[..., TrackData]:
+def make_track(**overrides) -> TrackData:
     """Factory for TrackData with sensible defaults."""
-
-    def _make(**overrides: Any) -> TrackData:
-        defaults = TrackData(id="track-1", closed=True, detections=(make_detection(),))
-        return replace(defaults, **overrides)
-
-    return _make
+    defaults = TrackData(id="track-1", closed=True, detections=(make_detection(),))
+    return replace(defaults, **overrides)

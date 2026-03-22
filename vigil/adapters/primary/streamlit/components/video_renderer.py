@@ -1,3 +1,4 @@
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -63,8 +64,6 @@ def render_video_with_tracks(video_path: Path, tracks: list[TrackData]) -> Path:
     Writes the annotated video to a temporary file and returns its path. The
     caller is responsible for cleaning up the file when done.
     """
-    import tempfile
-
     frame_detections = _build_frame_detections(tracks)
 
     cap = cv2.VideoCapture(str(video_path))
