@@ -2,18 +2,14 @@ from typing import Protocol, runtime_checkable
 
 import httpx
 
+from vigil.adapters.primary.streamlit.components._mappers import tracks_from_payload, video_status_from_payload
 from vigil.adapters.primary.streamlit.components.config import API_BASE_URL, REQUEST_TIMEOUT
 from vigil.adapters.primary.streamlit.components.exceptions import (
     VigilAPIError,
     VigilConnectionError,
     VigilNotFoundError,
 )
-from vigil.adapters.primary.streamlit.components.models import (
-    BoundingBox,
-    DetectionData,
-    TrackData,
-    VideoStatus,
-)
+from vigil.adapters.primary.streamlit.components.models import TrackData, VideoStatus
 
 # (filename, data, content-type)
 _UploadFile = tuple[str, bytes, str]
@@ -67,34 +63,8 @@ class VigilClient:
 
     def get_status(self, video_id: str) -> VideoStatus:
         """Fetch the current analysis status for a video."""
-        payload = self._request("GET", f"/videos/{video_id}/status").json()
-        return VideoStatus(
-            video_id=payload["video_id"],
-            analysed_frames=payload["analysed_frames"],
-            total_frames=payload["total_frames"],
-        )
+        return video_status_from_payload(self._request("GET", f"/videos/{video_id}/status").json())
 
     def get_tracks(self, video_id: str) -> list[TrackData]:
         """Retrieve all object tracks for a processed video."""
-        payload = self._request("GET", f"/videos/{video_id}/tracks").json()
-        return [
-            TrackData(
-                id=track["id"],
-                closed=track["closed"],
-                detections=tuple(
-                    DetectionData(
-                        frame_position=det["frame_position"],
-                        label=det["label"],
-                        confidence=det["confidence"],
-                        bbox=BoundingBox(
-                            center_x=det["bbox"]["center_x"],
-                            center_y=det["bbox"]["center_y"],
-                            width=det["bbox"]["width"],
-                            height=det["bbox"]["height"],
-                        ),
-                    )
-                    for det in track["detections"]
-                ),
-            )
-            for track in payload["tracks"]
-        ]
+        return tracks_from_payload(self._request("GET", f"/videos/{video_id}/tracks").json())
