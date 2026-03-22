@@ -3,7 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from pydantic import BaseModel, Field
 
-from vigil.adapters.primary.fastapi.app_dependencies import get_save_video_use_case, get_video_analysis_workflow
+from vigil.adapters.primary.fastapi.app_dependencies import (
+    get_save_video_use_case,
+    get_video_analysis_workflow,
+)
 from vigil.business_logic.models.video_source import VideoSource
 
 router = APIRouter(tags=["videos"])

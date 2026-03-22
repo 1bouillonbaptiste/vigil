@@ -1,7 +1,5 @@
-from dataclasses import dataclass
 from pathlib import Path
 
-import pytest
 from starlette.testclient import TestClient
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
@@ -16,20 +14,9 @@ from vigil.adapters.secondary.fake_tracker import FakeTracker
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
-from vigil.business_logic.models.video_source import VideoSource
-from vigil.business_logic.services.id_factory import IdFactory
 
 
-@dataclass
-class ThisContext:
-    """Context for testing vidoe analysis controller."""
-
-    track_repository: InMemoryTrackRepository
-    client: TestClient
-
-
-@pytest.fixture(scope="function")
-def this_context(fastapi_client: TestClient, tmp_path: Path) -> ThisContext:
+def test_can_get_video_tracks(fastapi_client: TestClient, tmp_path: Path, video_filepath: Path):
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
     detection_model = FakeDetectionModel()
@@ -42,24 +29,14 @@ def this_context(fastapi_client: TestClient, tmp_path: Path) -> ThisContext:
     fastapi_client.app.dependency_overrides[_get_detection_model] = lambda: detection_model  # type: ignore
     fastapi_client.app.dependency_overrides[_get_tracker] = lambda: tracker  # type: ignore
 
-    return ThisContext(track_repository=track_repository, client=fastapi_client)
-
-
-def test_can_save_a_video(this_context: ThisContext, video_filepath: Path):
-    # When
     with open(video_filepath, "rb") as file:
-        response = this_context.client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
+        post_response = fastapi_client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
-    # Then
-    assert response.status_code == 202
-    expected_video_id = IdFactory.new_video_id(VideoSource(uri="video.mp4"))
-    assert response.json() == {"video_id": str(expected_video_id)}
+    video_id = post_response.json()["video_id"]
+    response = fastapi_client.get(f"/videos/{video_id}/tracks")
 
-
-def test_analysis_saves_tracks_in_repository(this_context: ThisContext, video_filepath: Path):
-    # When
-    with open(video_filepath, "rb") as file:
-        this_context.client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
-
-    # Then
-    assert len(this_context.track_repository.list_all()) == 1
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert len(body["tracks"]) == 1
+    assert len(body["tracks"][0]["detections"]) == 10

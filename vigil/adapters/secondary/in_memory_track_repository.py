@@ -22,6 +22,10 @@ class InMemoryTrackRepository(TrackRepository):
         """List all open tracks for a given video."""
         return [t for t in self._tracks.values() if not t.closed and t.video_id == video_id]
 
+    def list_by_video_id(self, video_id: UUID) -> list[Track]:
+        """List all tracks (open and closed) for a given video."""
+        return [t for t in self._tracks.values() if t.video_id == video_id]
+
     def list_all(self) -> list[Track]:
         """List all tracks."""
         return list(self._tracks.values())
