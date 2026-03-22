@@ -1,5 +1,7 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 import cv2
 import numpy as np
@@ -14,6 +16,7 @@ from vigil.adapters.primary.fastapi.app_dependencies import (
     _get_video_repository,
 )
 from vigil.adapters.primary.fastapi.main import app
+from vigil.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
 from vigil.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.adapters.secondary.fake_tracker import FakeTracker
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
@@ -62,3 +65,30 @@ def video_path(tmp_path: Path) -> Path:
 def video_bytes(video_path: Path) -> bytes:
     """Minimal 10-frame 64x64 MP4 video as raw bytes."""
     return video_path.read_bytes()
+
+
+@pytest.fixture()
+def make_detection() -> Callable[..., DetectionData]:
+    """Factory for DetectionData with sensible defaults."""
+
+    def _make(**overrides: Any) -> DetectionData:
+        defaults = DetectionData(
+            frame_position=0,
+            label="person",
+            confidence=0.9,
+            bbox=BoundingBox(center_x=32, center_y=32, width=20, height=20),
+        )
+        return replace(defaults, **overrides)
+
+    return _make
+
+
+@pytest.fixture()
+def make_track(make_detection: Callable[..., DetectionData]) -> Callable[..., TrackData]:
+    """Factory for TrackData with sensible defaults."""
+
+    def _make(**overrides: Any) -> TrackData:
+        defaults = TrackData(id="track-1", closed=True, detections=(make_detection(),))
+        return replace(defaults, **overrides)
+
+    return _make

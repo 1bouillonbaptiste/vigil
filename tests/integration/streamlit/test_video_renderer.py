@@ -1,27 +1,12 @@
-from dataclasses import replace
+from collections.abc import Callable
 from pathlib import Path
 
 import cv2
 from starlette.testclient import TestClient
 
 from vigil.adapters.primary.streamlit.components.api_client import VigilClient
-from vigil.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
+from vigil.adapters.primary.streamlit.components.models import DetectionData, TrackData
 from vigil.adapters.primary.streamlit.components.video_renderer import render_video_with_tracks
-
-
-def make_detection(**overrides) -> DetectionData:
-    defaults = DetectionData(
-        frame_position=0,
-        label="person",
-        confidence=0.9,
-        bbox=BoundingBox(center_x=32, center_y=32, width=20, height=20),
-    )
-    return replace(defaults, **overrides)
-
-
-def make_track(**overrides) -> TrackData:
-    defaults = TrackData(id="track-1", closed=True, detections=(make_detection(),))
-    return replace(defaults, **overrides)
 
 
 def test_renders_a_readable_mp4_file(video_path: Path) -> None:
@@ -46,7 +31,11 @@ def test_output_has_same_frame_count_as_input(video_path: Path) -> None:
     assert frame_count == 10
 
 
-def test_renders_without_error_when_detections_span_all_frames(video_path: Path) -> None:
+def test_renders_without_error_when_detections_span_all_frames(
+    video_path: Path,
+    make_detection: Callable[..., DetectionData],
+    make_track: Callable[..., TrackData],
+) -> None:
     tracks = [
         make_track(
             detections=tuple(make_detection(frame_position=i) for i in range(10)),
