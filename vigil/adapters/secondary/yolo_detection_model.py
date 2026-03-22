@@ -4,6 +4,7 @@ from typing import Any, Final, Protocol
 
 import numpy as np
 import numpy.typing as npt
+from ultralytics import YOLO
 
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Prediction
 
@@ -90,6 +91,4 @@ def make_yolo_detection_model(
     Defaults to the bundled yolov8n weights at ``models/yolov8n.pt``.
     Pass a different ``model_path`` to swap variants without a code change.
     """
-    from ultralytics import YOLO
-
     return YoloDetectionModel(yolo_model=YOLO(str(model_path)), confidence_threshold=confidence_threshold)
