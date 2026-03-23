@@ -32,12 +32,13 @@ def _build_frame_detections(tracks: list[TrackData]) -> dict[int, list[Detection
 def _draw_detections(frame: np.ndarray, detections: list[DetectionData]) -> np.ndarray:
     """Draw bounding boxes and labels on a single frame (returns a copy)."""
     output = frame.copy()
+    frame_height = frame.shape[0]
     for det in detections:
         b = det.bbox
         x1 = b.center_x - b.width // 2
-        y1 = b.center_y - b.height // 2
+        y1 = frame_height - (b.center_y + b.height // 2)
         x2 = b.center_x + b.width // 2
-        y2 = b.center_y + b.height // 2
+        y2 = frame_height - (b.center_y - b.height // 2)
 
         color = _LABEL_COLORS.get(det.label, _DEFAULT_COLOR)
         cv2.rectangle(output, (x1, y1), (x2, y2), color, _BOX_THICKNESS)
