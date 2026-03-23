@@ -3,6 +3,7 @@ import tempfile
 from dataclasses import replace
 from pathlib import Path
 
+import cv2
 import streamlit as st
 
 from vigil.adapters.primary.streamlit.components.api_client import VigilClient
@@ -21,6 +22,7 @@ st.set_page_config(
 st.session_state.setdefault("videos", {})  # dict[str, VideoEntry]
 st.session_state.setdefault("selected_id", None)  # str | None
 st.session_state.setdefault("rendered_path", None)  # Path | None
+st.session_state.setdefault("portrait_video", False)  # bool
 
 client: VigilClient = VigilClient.default()
 
@@ -28,10 +30,19 @@ client: VigilClient = VigilClient.default()
 # --- Helpers ------------------------------------------------------------------------
 
 
+def _is_portrait(video_path: Path) -> bool:
+    cap = cv2.VideoCapture(str(video_path))
+    w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    cap.release()
+    return h > w
+
+
 def _select_video(video_id: str) -> None:
     """Set the given video as the only selected one."""
     st.session_state.selected_id = video_id
     st.session_state.rendered_path = None
+    st.session_state.portrait_video = False
 
 
 def _handle_upload(uploaded_file) -> None:
@@ -75,6 +86,7 @@ def _handle_display() -> None:
         return
 
     st.session_state.rendered_path = rendered_path
+    st.session_state.portrait_video = _is_portrait(rendered_path)
 
 
 # --- Background status poller -------------------------------------------------------
@@ -100,6 +112,20 @@ def _status_poller() -> None:
 
 
 # --- Layout -------------------------------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+    video {
+        max-height: calc(100vh - 150px) !important;
+        max-width: 100% !important;
+        width: auto !important;
+        height: auto !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.title("🎥 Vigil")
 
@@ -162,7 +188,11 @@ with left:
 with right:
     rendered_path: Path | None = st.session_state.rendered_path
     if rendered_path is not None and rendered_path.exists():
-        st.video(str(rendered_path))
+        if st.session_state.portrait_video:
+            col, _ = st.columns(2)
+            col.video(str(rendered_path))
+        else:
+            st.video(str(rendered_path))
     else:
         st.markdown(
             """
