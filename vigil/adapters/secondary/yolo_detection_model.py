@@ -9,7 +9,6 @@ from ultralytics import YOLO
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Prediction
 
 _MODELS_DIR: Final[Path] = Path(__file__).parent / "models"
-_DEFAULT_MODEL: Final[Path] = _MODELS_DIR / "yolov8n.pt"
 
 _YOLO_CLASS_MAPPING: Final[dict[str, ClassLabel]] = {
     "person": ClassLabel.PERSON,
@@ -83,12 +82,31 @@ def _extract_predictions(result: _YoloResult, frame_height: int, confidence_thre
 
 
 def make_yolo_detection_model(
-    model_path: Path = _DEFAULT_MODEL,
+    model_name: str = "yolov8n",
     confidence_threshold: float = 0.5,
 ) -> YoloDetectionModel:
-    """Load a YOLO model from disk and wrap it as a DetectionModel.
+    """Wrap a YOLO model as a DetectionModel.
 
-    Defaults to the bundled yolov8n weights at ``models/yolov8n.pt``.
-    Pass a different ``model_path`` to swap variants without a code change.
+    For plain model names (e.g. ``"yolov8n"``, ``"yolov8s"``), the bundled
+    weights under ``models/`` are used when present; otherwise Ultralytics
+    downloads and caches them automatically.  Absolute or relative paths are
+    forwarded to Ultralytics as-is.
     """
-    return YoloDetectionModel(yolo_model=YOLO(str(model_path)), confidence_threshold=confidence_threshold)
+    return YoloDetectionModel(
+        yolo_model=YOLO(_resolve_model_source(model_name)), confidence_threshold=confidence_threshold
+    )
+
+
+def _resolve_model_source(model_name: str) -> str:
+    """Return the model source string to pass to ``YOLO()``.
+
+    Plain names (no path separator) are resolved against the bundled models
+    directory first; if the ``.pt`` file is not found there the name is
+    returned unchanged so Ultralytics can handle download/cache.
+    """
+    if "/" not in model_name and "\\" not in model_name:
+        name = model_name.removesuffix(".pt")
+        local_path = _MODELS_DIR / f"{name}.pt"
+        if local_path.exists():
+            return str(local_path)
+    return model_name

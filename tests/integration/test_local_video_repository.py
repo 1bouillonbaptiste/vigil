@@ -11,7 +11,7 @@ from vigil.business_logic.services.id_factory import IdFactory
 
 
 @pytest.fixture(scope="function")
-def video_filepath(tmp_path: Path) -> Path:
+def fake_video_filepath(tmp_path: Path) -> Path:
     """Write a minimal MP4 video to disk for testing."""
     filepath = tmp_path / "video.mp4"
     writer = cv2.VideoWriter(
@@ -36,10 +36,10 @@ def repository(tmp_path: Path) -> LocalVideoRepository:
 
 def test_should_save_and_read_back_correct_frame_count(
     repository: LocalVideoRepository,
-    video_filepath: Path,
+    fake_video_filepath: Path,
 ) -> None:
     source = VideoSource(uri="clip.mp4")
-    repository.save(source, video_filepath.read_bytes())
+    repository.save(source, fake_video_filepath.read_bytes())
     video_id = IdFactory.new_video_id(source)
 
     frames = list(repository.read(video_id))
@@ -49,10 +49,10 @@ def test_should_save_and_read_back_correct_frame_count(
 
 def test_should_report_correct_frame_count(
     repository: LocalVideoRepository,
-    video_filepath: Path,
+    fake_video_filepath: Path,
 ) -> None:
     source = VideoSource(uri="clip.mp4")
-    repository.save(source, video_filepath.read_bytes())
+    repository.save(source, fake_video_filepath.read_bytes())
     video_id = IdFactory.new_video_id(source)
 
     assert repository.frame_count(video_id) == 10
@@ -70,10 +70,10 @@ def test_frame_count_raises_video_not_found_for_unknown_id(repository: LocalVide
 
 def test_should_yield_numpy_arrays(
     repository: LocalVideoRepository,
-    video_filepath: Path,
+    fake_video_filepath: Path,
 ) -> None:
     source = VideoSource(uri="clip.mp4")
-    repository.save(source, video_filepath.read_bytes())
+    repository.save(source, fake_video_filepath.read_bytes())
     video_id = IdFactory.new_video_id(source)
 
     frames = list(repository.read(video_id))
