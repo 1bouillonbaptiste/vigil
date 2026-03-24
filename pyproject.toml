@@ -19,6 +19,7 @@ ultralytics = ">=8.3,<9"
 streamlit = "^1.55.0"
 imageio = "^2.37.3"
 imageio-ffmpeg = "^0.6.0"
+pyyaml = ">=6.0,<7"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -29,6 +30,7 @@ pre-commit = ">=4.2,<5"
 pytest = ">=8.3,<9"
 pytest-cases = ">=3.8,<4"
 pytest-cov = ">=6.1,<7"
+types-pyyaml = ">=6.0,<7"
 
 [tool.docformatter]
 wrap-summaries = 80
