@@ -11,6 +11,7 @@ from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
 from vigil.business_logic.use_cases.save_video import SaveVideoUseCase
+from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
 
 
@@ -64,15 +65,23 @@ def get_video_analysis_workflow(
     video_repository=Depends(_get_video_repository),
     frame_repository=Depends(_get_frame_repository),
     detection_service=Depends(_build_detection_service),
-    tracker=Depends(_get_tracker),
     track_repository=Depends(_get_track_repository),
+    tracker=Depends(_get_tracker),
 ) -> VideoAnalysisWorkflow:
-    """Get the `VideoAnalysisWorkflow`."""
+    """Get the `VideoAnalysisWorkflow`.
+
+    A fresh tracker is injected per request so that each video analysis gets
+    isolated per-video state. Trackers are stateful (Kalman filters, track
+    history) and must never be shared across concurrent analyses.
+    """
+    track_use_case = TrackObjectsUseCase(
+        track_repository=track_repository,
+        tracker=tracker,
+    )
     return VideoAnalysisWorkflow(
         video_repository=video_repository,
         frame_repository=frame_repository,
         detection_service=detection_service,
-        tracker=tracker,
-        track_repository=track_repository,
+        track_use_case=track_use_case,
         batch_size=8,
     )

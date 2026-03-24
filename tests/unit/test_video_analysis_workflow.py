@@ -16,6 +16,7 @@ from vigil.business_logic.models.track import Track
 from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.services.id_factory import IdFactory
+from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
 
 VIDEO_ID = IdFactory.new_video_id(VideoSource(uri="test-video"))
@@ -82,12 +83,15 @@ def this_context() -> ThisContext:
     track_repository = InMemoryTrackRepository()
     spy_tracker = SpyTracker()
     detection_service = DetectionService(model=FakeDetectionModel())
+    track_use_case = TrackObjectsUseCase(
+        track_repository=track_repository,
+        tracker=spy_tracker,
+    )
     workflow = VideoAnalysisWorkflow(
         video_repository=video_repository,
         frame_repository=frame_repository,
         detection_service=detection_service,
-        tracker=spy_tracker,
-        track_repository=track_repository,
+        track_use_case=track_use_case,
         batch_size=2,
     )
     return ThisContext(
