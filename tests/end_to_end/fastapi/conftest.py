@@ -16,7 +16,7 @@ def fastapi_client() -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture(scope="function")
-def video_filepath(tmp_path: Path) -> Path:
+def fake_video_filepath(tmp_path: Path) -> Path:
     """Generate a 10-frame MP4 video in a temporary directory."""
     filepath = tmp_path / "video.mp4"
     writer = cv2.VideoWriter(
@@ -32,5 +32,6 @@ def video_filepath(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(scope="function")
-def realist_video_filepath(test_data_dir: Path) -> Path:
+def realistic_video_filepath(test_data_dir: Path) -> Path:
+    """Return the path to the realistic 10-frame people video fixture."""
     return test_data_dir / "people_10frames.mp4"

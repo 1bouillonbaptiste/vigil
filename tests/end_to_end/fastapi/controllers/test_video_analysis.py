@@ -45,9 +45,9 @@ def this_context(fastapi_client: TestClient, tmp_path: Path) -> ThisContext:
     return ThisContext(track_repository=track_repository, client=fastapi_client)
 
 
-def test_can_save_a_video(this_context: ThisContext, video_filepath: Path):
+def test_can_save_a_video(this_context: ThisContext, fake_video_filepath: Path):
     # When
-    with open(video_filepath, "rb") as file:
+    with open(fake_video_filepath, "rb") as file:
         response = this_context.client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
     # Then
@@ -56,9 +56,9 @@ def test_can_save_a_video(this_context: ThisContext, video_filepath: Path):
     assert response.json() == {"video_id": str(expected_video_id)}
 
 
-def test_analysis_saves_tracks_in_repository(this_context: ThisContext, video_filepath: Path):
+def test_analysis_saves_tracks_in_repository(this_context: ThisContext, fake_video_filepath: Path):
     # When
-    with open(video_filepath, "rb") as file:
+    with open(fake_video_filepath, "rb") as file:
         this_context.client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
     # Then

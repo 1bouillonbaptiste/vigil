@@ -28,7 +28,7 @@ class _NoOpWorkflow:
         pass
 
 
-def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_path: Path, video_filepath: Path):
+def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_path: Path, fake_video_filepath: Path):
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
 
@@ -38,7 +38,7 @@ def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_pat
     fastapi_client.app.dependency_overrides[_get_detection_model] = lambda: FakeDetectionModel()  # type: ignore
     fastapi_client.app.dependency_overrides[_get_tracker] = lambda: FakeTracker()  # type: ignore
 
-    with open(video_filepath, "rb") as file:
+    with open(fake_video_filepath, "rb") as file:
         post_response = fastapi_client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
     video_id = post_response.json()["video_id"]
@@ -52,7 +52,7 @@ def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_pat
 
 
 def test_returns_zero_analysed_frames_before_analysis_starts(
-    fastapi_client: TestClient, tmp_path: Path, video_filepath: Path
+    fastapi_client: TestClient, tmp_path: Path, fake_video_filepath: Path
 ):
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
@@ -61,7 +61,7 @@ def test_returns_zero_analysed_frames_before_analysis_starts(
     fastapi_client.app.dependency_overrides[_get_frame_repository] = lambda: frame_repository  # type: ignore
     fastapi_client.app.dependency_overrides[get_video_analysis_workflow] = lambda: _NoOpWorkflow()  # type: ignore
 
-    with open(video_filepath, "rb") as file:
+    with open(fake_video_filepath, "rb") as file:
         post_response = fastapi_client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
     video_id = post_response.json()["video_id"]

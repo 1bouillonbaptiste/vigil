@@ -16,7 +16,7 @@ from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRep
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
 
 
-def test_can_get_video_tracks(fastapi_client: TestClient, tmp_path: Path, video_filepath: Path):
+def test_can_get_video_tracks(fastapi_client: TestClient, tmp_path: Path, fake_video_filepath: Path):
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
     detection_model = FakeDetectionModel()
@@ -29,7 +29,7 @@ def test_can_get_video_tracks(fastapi_client: TestClient, tmp_path: Path, video_
     fastapi_client.app.dependency_overrides[_get_detection_model] = lambda: detection_model  # type: ignore
     fastapi_client.app.dependency_overrides[_get_tracker] = lambda: tracker  # type: ignore
 
-    with open(video_filepath, "rb") as file:
+    with open(fake_video_filepath, "rb") as file:
         post_response = fastapi_client.post("/analyze-video", files={"file": ("video.mp4", file, "video/mp4")})
 
     video_id = post_response.json()["video_id"]
