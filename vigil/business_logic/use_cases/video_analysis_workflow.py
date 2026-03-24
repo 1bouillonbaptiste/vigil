@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from vigil.business_logic.gateways.frame_repository import FrameRepository
+from vigil.business_logic.gateways.track_repository import TrackRepository
+from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame import Frame
 from vigil.business_logic.services.detection_service import DetectionService
@@ -12,6 +14,11 @@ class VideoAnalysisWorkflow:
     """Track objects across a video.
 
     Orchestrates use cases and services to analyse a video source end-to-end.
+
+    The workflow owns the tracker for the duration of a single video analysis.
+    The tracker must not be shared across concurrent workflow instances: trackers
+    maintain per-video state (Kalman filters, track history) that is meaningless
+    across different videos.
     """
 
     def __init__(
@@ -19,13 +26,17 @@ class VideoAnalysisWorkflow:
         video_repository: VideoRepository,
         frame_repository: FrameRepository,
         detection_service: DetectionService,
-        track_use_case: TrackObjectsUseCase,
+        tracker: Tracker,
+        track_repository: TrackRepository,
         batch_size: int,
     ) -> None:
         self._video_repository = video_repository
         self._frame_repository = frame_repository
         self._detection_service = detection_service
-        self._track_use_case = track_use_case
+        self._track_use_case = TrackObjectsUseCase(
+            track_repository=track_repository,
+            tracker=tracker,
+        )
         self._batch_size = batch_size
 
     def execute(self, video_id: UUID) -> None:

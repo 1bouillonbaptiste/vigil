@@ -130,3 +130,10 @@ def test_should_build_bytetrack_tracker() -> None:
     tracker = make_bytetrack_tracker()
 
     assert isinstance(tracker, ByteTrackTracker)
+
+
+def test_should_create_a_new_instance_on_every_call() -> None:
+    tracker_1 = make_bytetrack_tracker()
+    tracker_2 = make_bytetrack_tracker()
+
+    assert tracker_1 is not tracker_2
