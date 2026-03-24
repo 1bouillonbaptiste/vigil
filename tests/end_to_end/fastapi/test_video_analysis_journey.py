@@ -16,20 +16,19 @@ from vigil.business_logic.use_cases.save_video import SaveVideoUseCase
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
 
-_FIXTURE_VIDEO: Path = Path(__file__).parent / "fixtures" / "people_10frames.mp4"
-
 
 @dataclass
 class ThisContext:
+    """Context for testing the video analysis journey."""
+
     save_video: SaveVideoUseCase
     analyze_video: VideoAnalysisWorkflow
     get_video_tracks: GetVideoTracksUseCase
 
 
-@pytest.fixture(scope="module")
-def this_context(tmp_path_factory: pytest.TempPathFactory) -> ThisContext:
-    storage = tmp_path_factory.mktemp("journey")
-    video_repository = LocalVideoRepository(storage_dir=storage)
+@pytest.fixture(scope="function")
+def this_context(tmp_path: Path) -> ThisContext:
+    video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
     track_repository = InMemoryTrackRepository()
     detection_model = make_yolo_detection_model(model_name="yolov8n")
@@ -49,10 +48,10 @@ def this_context(tmp_path_factory: pytest.TempPathFactory) -> ThisContext:
     )
 
 
-def test_should_detect_people_across_video_frames(this_context: ThisContext) -> None:
+def test_should_detect_people_across_video_frames(this_context: ThisContext, realist_video_filepath: Path) -> None:
     video_id = this_context.save_video.execute(
-        source=VideoSource(uri="people_10frames.mp4"),
-        data=_FIXTURE_VIDEO.read_bytes(),
+        source=VideoSource(uri=realist_video_filepath.name),
+        data=realist_video_filepath.read_bytes(),
     )
 
     this_context.analyze_video.execute(video_id=video_id)
