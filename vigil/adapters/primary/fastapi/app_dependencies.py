@@ -13,6 +13,11 @@ from vigil.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCas
 from vigil.business_logic.use_cases.save_video import SaveVideoUseCase
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
+from vigil.shared_kernel.gateways.domain_event_publisher import DomainEventPublisher
+
+
+def _get_domain_event_publisher(request: Request) -> DomainEventPublisher:
+    return request.app.state.domain_event_publisher
 
 
 def _get_video_repository(request: Request) -> VideoRepository:
@@ -62,6 +67,7 @@ def get_video_tracks_use_case(
 
 
 def get_video_analysis_workflow(
+    domain_event_publisher=Depends(_get_domain_event_publisher),
     video_repository=Depends(_get_video_repository),
     frame_repository=Depends(_get_frame_repository),
     detection_service=Depends(_build_detection_service),
@@ -79,6 +85,7 @@ def get_video_analysis_workflow(
         tracker=tracker,
     )
     return VideoAnalysisWorkflow(
+        domain_event_publisher=domain_event_publisher,
         video_repository=video_repository,
         frame_repository=frame_repository,
         detection_service=detection_service,

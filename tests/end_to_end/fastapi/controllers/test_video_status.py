@@ -6,6 +6,7 @@ from starlette.testclient import TestClient
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
     _get_detection_model,
+    _get_domain_event_publisher,
     _get_frame_repository,
     _get_track_repository,
     _get_tracker,
@@ -17,6 +18,7 @@ from vigil.adapters.secondary.fake_tracker import FakeTracker
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
+from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
 
 
 class _NoOpWorkflow:
@@ -29,9 +31,11 @@ class _NoOpWorkflow:
 
 
 def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_path: Path, fake_video_filepath: Path):
+    domain_event_publisher = InMemoryEventPublisher()
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
 
+    fastapi_client.app.dependency_overrides[_get_domain_event_publisher] = lambda: domain_event_publisher  # type: ignore
     fastapi_client.app.dependency_overrides[_get_video_repository] = lambda: video_repository  # type: ignore
     fastapi_client.app.dependency_overrides[_get_frame_repository] = lambda: frame_repository  # type: ignore
     fastapi_client.app.dependency_overrides[_get_track_repository] = lambda: InMemoryTrackRepository()  # type: ignore

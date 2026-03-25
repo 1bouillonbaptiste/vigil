@@ -6,6 +6,7 @@ from starlette.testclient import TestClient
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
     _get_detection_model,
+    _get_domain_event_publisher,
     _get_frame_repository,
     _get_track_repository,
     _get_tracker,
@@ -18,6 +19,7 @@ from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRep
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
 from vigil.business_logic.models.video_source import VideoSource
 from vigil.business_logic.services.id_factory import IdFactory
+from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
 
 
 @dataclass
@@ -30,12 +32,14 @@ class ThisContext:
 
 @pytest.fixture(scope="function")
 def this_context(fastapi_client: TestClient, tmp_path: Path) -> ThisContext:
+    domain_event_publisher = InMemoryEventPublisher()
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
     detection_model = FakeDetectionModel()
     track_repository = InMemoryTrackRepository()
     tracker = FakeTracker()
 
+    fastapi_client.app.dependency_overrides[_get_domain_event_publisher] = lambda: domain_event_publisher  # type: ignore
     fastapi_client.app.dependency_overrides[_get_video_repository] = lambda: video_repository  # type: ignore
     fastapi_client.app.dependency_overrides[_get_frame_repository] = lambda: frame_repository  # type: ignore
     fastapi_client.app.dependency_overrides[_get_track_repository] = lambda: track_repository  # type: ignore

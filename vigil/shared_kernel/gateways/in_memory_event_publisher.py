@@ -3,7 +3,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from typing import TypeVar, get_type_hints
 
-from vigil.shared_kernel.gateways.domain_event_bus import DomainEventBus
+from vigil.shared_kernel.gateways.domain_event_publisher import DomainEventPublisher
 from vigil.shared_kernel.models.domain_event import DomainEvent
 
 T = TypeVar("T", bound=DomainEvent)
@@ -15,10 +15,11 @@ Handler = Callable[[T], None]
 
 def _event_type_of(handler: Callable[[T], None]) -> type[DomainEvent]:
     first_param = next(iter(inspect.signature(handler).parameters))
-    return get_type_hints(handler)[first_param]
+    hints_target = handler if inspect.isfunction(handler) or inspect.ismethod(handler) else type(handler).__call__
+    return get_type_hints(hints_target)[first_param]
 
 
-class InMemoryEventBus(DomainEventBus):
+class InMemoryEventPublisher(DomainEventPublisher):
     """Dispatch domain events synchronously to in-process subscribers."""
 
     def __init__(self) -> None:

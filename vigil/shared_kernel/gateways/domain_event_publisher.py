@@ -4,7 +4,7 @@ from typing import Protocol
 from vigil.shared_kernel.models.domain_event import DomainEvent
 
 
-class DomainEventBus(Protocol):
+class DomainEventPublisher(Protocol):
     """Publish domain events to registered handlers."""
 
     def publish(self, event: DomainEvent) -> None:

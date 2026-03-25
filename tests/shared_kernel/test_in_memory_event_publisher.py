@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from vigil.shared_kernel.gateways.in_memory_event_bus import InMemoryEventBus
+from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
 from vigil.shared_kernel.models.domain_event import DomainEvent
 
 
@@ -24,13 +24,13 @@ class OrderCancelled(DomainEvent):
 class ThisContext:
     """Context for testing the in memory event bus."""
 
-    bus: InMemoryEventBus
+    bus: InMemoryEventPublisher
     received: list[DomainEvent]
 
 
 @pytest.fixture
 def this_context() -> ThisContext:
-    return ThisContext(bus=InMemoryEventBus(), received=[])
+    return ThisContext(bus=InMemoryEventPublisher(), received=[])
 
 
 def test_should_call_handler_when_matching_event_is_published(this_context: ThisContext):

@@ -11,6 +11,7 @@ from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRep
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
 from vigil.adapters.secondary.yolo_detection_model import make_yolo_detection_model
+from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
 
 _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
 
@@ -18,6 +19,10 @@ _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager."""
+    # Shared kernel
+    domain_event_publisher = InMemoryEventPublisher()
+    app.state.domain_event_publisher = domain_event_publisher
+
     config = AppConfig.from_yaml(_CONFIG_PATH)
     video_repository = LocalVideoRepository(storage_dir=Path(tempfile.mkdtemp()))
     frame_repository = InMemoryFrameRepository()
