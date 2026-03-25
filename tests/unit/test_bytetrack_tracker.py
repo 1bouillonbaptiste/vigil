@@ -18,9 +18,15 @@ BBOX_A_NEARBY = BoundingBox(center_x=102, center_y=102, width=60, height=60)
 BBOX_B = BoundingBox(center_x=400, center_y=400, width=60, height=60)
 
 
-def make_detection(frame_id: FrameId, bbox: BoundingBox, confidence: float = 0.9) -> Detection:
+def make_detection(
+    frame_id: FrameId,
+    bbox: BoundingBox,
+    frame_position: int = 0,
+    confidence: float = 0.9,
+) -> Detection:
     return Detection(
         frame_id=frame_id,
+        frame_position=frame_position,
         prediction=Prediction(bbox=bbox, confidence=confidence, label=ClassLabel.PERSON),
     )
 

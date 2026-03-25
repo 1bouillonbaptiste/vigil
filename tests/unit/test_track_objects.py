@@ -57,6 +57,7 @@ def this_context() -> ThisContext:
 def _detection(frame_id: FrameId, bbox: BoundingBox) -> Detection:
     return Detection(
         frame_id=frame_id,
+        frame_position=0,
         prediction=Prediction(bbox=bbox, confidence=0.5, label=ClassLabel.PERSON),
     )
 
