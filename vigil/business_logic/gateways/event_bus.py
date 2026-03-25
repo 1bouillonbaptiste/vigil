@@ -1,18 +1,16 @@
 from collections.abc import Callable
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 from vigil.business_logic.models.domain_event import DomainEvent
 
-T = TypeVar("T", bound=DomainEvent)
 
-
-class DomainEventPublisher(Protocol[T]):
+class DomainEventBus(Protocol):
     """Publish domain events to registered handlers."""
 
-    def publish(self, event: T) -> None:
+    def publish(self, event: DomainEvent) -> None:
         """Dispatch an event to all registered handlers."""
         ...
 
-    def subscribe(self, handler: Callable[[T], None]) -> None:
+    def subscribe(self, handler: Callable[[DomainEvent], None]) -> None:
         """Register a handler to receive future events."""
         ...

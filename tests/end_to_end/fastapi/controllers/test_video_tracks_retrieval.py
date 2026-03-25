@@ -1,18 +1,18 @@
 from pathlib import Path
 
 from starlette.testclient import TestClient
+from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
     _get_detection_model,
-    _get_publisher,
     _get_progress_projection,
+    _get_publisher,
     _get_track_repository,
     _get_tracker,
     _get_video_repository,
 )
 from vigil.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.adapters.secondary.fake_tracker import FakeTracker
-from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
 from vigil.business_logic.models.frame_analyzed import FrameAnalyzed

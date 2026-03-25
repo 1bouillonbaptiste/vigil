@@ -1,23 +1,20 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
 
 from vigil.business_logic.models.domain_event import DomainEvent
 
-T = TypeVar("T", bound=DomainEvent)
-
 
 @dataclass
-class InMemoryDomainEventPublisher(Generic[T]):
+class InMemoryEventBus:
     """Dispatch domain events synchronously to in-process subscribers."""
 
-    _handlers: list[Callable[[T], None]] = field(default_factory=list, init=False)
+    _handlers: list[Callable[[DomainEvent], None]] = field(default_factory=list, init=False)
 
-    def subscribe(self, handler: Callable[[T], None]) -> None:
+    def subscribe(self, handler: Callable[[DomainEvent], None]) -> None:
         """Register a handler to be called on every published event."""
         self._handlers.append(handler)
 
-    def publish(self, event: T) -> None:
+    def publish(self, event: DomainEvent) -> None:
         """Call all registered handlers with the event."""
         for handler in self._handlers:
             handler(event)

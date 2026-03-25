@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from vigil.business_logic.gateways.domain_event_publisher import DomainEventPublisher
+from vigil.business_logic.gateways.event_bus import DomainEventBus
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame import Frame
 from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
@@ -18,7 +18,7 @@ class VideoAnalysisWorkflow:
     def __init__(
         self,
         video_repository: VideoRepository,
-        publisher: DomainEventPublisher[FrameAnalyzed],
+        publisher: DomainEventBus,
         detection_service: DetectionService,
         track_use_case: TrackObjectsUseCase,
         batch_size: int,

@@ -2,13 +2,11 @@ from fastapi import Depends
 from starlette.requests import Request
 
 from vigil.adapters.secondary.bytetrack_tracker import make_bytetrack_tracker
-from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 from vigil.business_logic.gateways.detection_model import DetectionModel
-from vigil.business_logic.gateways.domain_event_publisher import DomainEventPublisher
+from vigil.business_logic.gateways.event_bus import DomainEventBus
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_repository import VideoRepository
-from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
 from vigil.business_logic.services.analysis_progress_projection import AnalysisProgressProjection
 from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
@@ -22,7 +20,7 @@ def _get_video_repository(request: Request) -> VideoRepository:
     return request.app.state.video_repository
 
 
-def _get_publisher(request: Request) -> DomainEventPublisher[FrameAnalyzed]:
+def _get_publisher(request: Request) -> DomainEventBus:
     return request.app.state.publisher
 
 

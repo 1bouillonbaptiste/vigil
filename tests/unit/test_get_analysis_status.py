@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
+from vigil.adapters.secondary.in_memory_event_bus import InMemoryEventBus
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
 from vigil.business_logic.models.video_source import VideoSource
@@ -37,14 +37,14 @@ class StubVideoRepository(VideoRepository):
 class ThisContext:
     """Context for testing GetAnalysisStatusUseCase."""
 
-    publisher: InMemoryDomainEventPublisher[FrameAnalyzed]
+    publisher: InMemoryEventBus
     video_repository: StubVideoRepository
     use_case: GetAnalysisStatusUseCase
 
 
 @pytest.fixture
 def this_context() -> ThisContext:
-    publisher: InMemoryDomainEventPublisher[FrameAnalyzed] = InMemoryDomainEventPublisher()
+    publisher = InMemoryEventBus()
     progress_projection = AnalysisProgressProjection()
     publisher.subscribe(progress_projection)
     video_repository = StubVideoRepository()

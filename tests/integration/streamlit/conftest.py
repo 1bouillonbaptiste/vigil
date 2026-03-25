@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import pytest
 from starlette.testclient import TestClient
+from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
     _get_detection_model,
@@ -19,7 +20,6 @@ from vigil.adapters.primary.fastapi.main import app
 from vigil.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
 from vigil.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.adapters.secondary.fake_tracker import FakeTracker
-from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
 from vigil.business_logic.models.frame_analyzed import FrameAnalyzed

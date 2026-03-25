@@ -6,12 +6,13 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
+from vigil.adapters.secondary.in_memory_event_bus import InMemoryEventBus
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
+from vigil.business_logic.models.domain_event import DomainEvent
 from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
 from vigil.business_logic.models.track import Track
 from vigil.business_logic.models.video_source import VideoSource
@@ -73,7 +74,7 @@ class ThisContext:
     """Context for testing VideoAnalysisWorkflow."""
 
     video_repository: StubVideoRepository
-    publisher: InMemoryDomainEventPublisher[FrameAnalyzed]
+    publisher: InMemoryEventBus
     progress_projection: AnalysisProgressProjection
     spy_tracker: SpyTracker
     workflow: VideoAnalysisWorkflow
@@ -82,7 +83,7 @@ class ThisContext:
 @pytest.fixture(scope="function")
 def this_context() -> ThisContext:
     video_repository = StubVideoRepository()
-    publisher: InMemoryDomainEventPublisher[FrameAnalyzed] = InMemoryDomainEventPublisher()
+    publisher = InMemoryEventBus()
     progress_projection = AnalysisProgressProjection()
     publisher.subscribe(progress_projection)
     track_repository = InMemoryTrackRepository()
@@ -124,14 +125,14 @@ def test_should_publish_events_with_correct_positions(this_context: ThisContext)
     # Given
     this_context.video_repository.add(np.array([1], dtype=np.uint8))
     this_context.video_repository.add(np.array([2], dtype=np.uint8))
-    received: list[FrameAnalyzed] = []
+    received: list[DomainEvent] = []
     this_context.publisher.subscribe(received.append)
 
     # When
     this_context.workflow.execute(VIDEO_ID)
 
     # Then
-    assert [e.position for e in received] == [0, 1]
+    assert [e.position for e in received if isinstance(e, FrameAnalyzed)] == [0, 1]
 
 
 def test_should_track_frames_in_order(this_context: ThisContext) -> None:
