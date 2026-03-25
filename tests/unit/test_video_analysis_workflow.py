@@ -6,7 +6,6 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.business_logic.gateways.detection_model import DetectionModel
 from vigil.business_logic.gateways.tracker import Tracker
@@ -86,7 +85,6 @@ class ThisContext:
 
     frame_analyzed_events: SpyFrameAnalyzed
     video_repository: StubVideoRepository
-    frame_repository: InMemoryFrameRepository
     spy_tracker: SpyTracker
     workflow: VideoAnalysisWorkflow
 
@@ -94,7 +92,6 @@ class ThisContext:
 @pytest.fixture(scope="function")
 def this_context() -> ThisContext:
     video_repository = StubVideoRepository()
-    frame_repository = InMemoryFrameRepository()
     track_repository = InMemoryTrackRepository()
     domain_event_publisher = InMemoryEventPublisher()
     spy_tracker = SpyTracker()
@@ -110,7 +107,6 @@ def this_context() -> ThisContext:
     workflow = VideoAnalysisWorkflow(
         domain_event_publisher=domain_event_publisher,
         video_repository=video_repository,
-        frame_repository=frame_repository,
         detection_service=detection_service,
         track_use_case=track_use_case,
         batch_size=2,
@@ -118,7 +114,6 @@ def this_context() -> ThisContext:
     return ThisContext(
         frame_analyzed_events=frame_analyzed_events,
         video_repository=video_repository,
-        frame_repository=frame_repository,
         spy_tracker=spy_tracker,
         workflow=workflow,
     )
