@@ -67,13 +67,11 @@ def test_returns_zero_analysed_frames_before_analysis_starts(
 ):
     domain_event_publisher = InMemoryEventPublisher()
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
-    frame_repository = InMemoryFrameRepository()
     analysis_progression = InMemoryAnalysisProgressionProjection()
 
     FrameAnalyzedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
 
     fastapi_client.app.dependency_overrides[_get_video_repository] = lambda: video_repository  # type: ignore
-    fastapi_client.app.dependency_overrides[_get_frame_repository] = lambda: frame_repository  # type: ignore
     fastapi_client.app.dependency_overrides[get_video_analysis_workflow] = lambda: _NoOpWorkflow()  # type: ignore
     fastapi_client.app.dependency_overrides[_get_analysis_progression] = lambda: analysis_progression  # type: ignore
 
@@ -94,7 +92,6 @@ def test_unknown_video_id_raises_404(fastapi_client: TestClient, tmp_path: Path)
     FrameAnalyzedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
 
     fastapi_client.app.dependency_overrides[_get_video_repository] = lambda: LocalVideoRepository(storage_dir=tmp_path)  # type: ignore
-    fastapi_client.app.dependency_overrides[_get_frame_repository] = lambda: InMemoryFrameRepository()  # type: ignore
     fastapi_client.app.dependency_overrides[_get_analysis_progression] = lambda: analysis_progression  # type: ignore
 
     response = fastapi_client.get(f"/videos/{uuid.uuid4()}/status")

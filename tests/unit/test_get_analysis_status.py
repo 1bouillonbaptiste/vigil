@@ -7,7 +7,6 @@ import numpy.typing as npt
 import pytest
 
 from vigil.adapters.secondary.in_memory_analysis_progression_projection import InMemoryAnalysisProgressionProjection
-from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame import Frame, FrameId
 from vigil.business_logic.models.video_source import VideoSource
@@ -37,7 +36,6 @@ class StubVideoRepository(VideoRepository):
 class ThisContext:
     """Context for testing GetAnalysisStatusUseCase."""
 
-    frame_repository: InMemoryFrameRepository
     video_repository: StubVideoRepository
     analysis_progression: InMemoryAnalysisProgressionProjection
     use_case: GetAnalysisStatusUseCase
@@ -45,16 +43,13 @@ class ThisContext:
 
 @pytest.fixture
 def this_context() -> ThisContext:
-    frame_repository = InMemoryFrameRepository()
     video_repository = StubVideoRepository()
     analysis_progression = InMemoryAnalysisProgressionProjection()
     use_case = GetAnalysisStatusUseCase(
-        frame_repository=frame_repository,
         video_repository=video_repository,
         analysis_progression=analysis_progression,
     )
     return ThisContext(
-        frame_repository=frame_repository,
         video_repository=video_repository,
         analysis_progression=analysis_progression,
         use_case=use_case,

@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from vigil.business_logic.gateways.analysis_progression_projection import AnalysisProgressionProjection
-from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.gateways.video_repository import VideoRepository
 
 
@@ -22,11 +21,9 @@ class GetAnalysisStatusUseCase:
 
     def __init__(
         self,
-        frame_repository: FrameRepository,
         video_repository: VideoRepository,
         analysis_progression: AnalysisProgressionProjection,
     ) -> None:
-        self._frame_repository = frame_repository
         self._video_repository = video_repository
         self._analysis_progression = analysis_progression
 

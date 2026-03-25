@@ -50,14 +50,11 @@ def _build_detection_service(detection_model=Depends(_get_detection_model)) -> D
 
 
 def get_analysis_status_use_case(
-    frame_repository=Depends(_get_frame_repository),
     video_repository=Depends(_get_video_repository),
     analysis_progression=Depends(_get_analysis_progression),
 ) -> GetAnalysisStatusUseCase:
     """Get the `GetAnalysisStatusUseCase`."""
-    return GetAnalysisStatusUseCase(
-        frame_repository=frame_repository, video_repository=video_repository, analysis_progression=analysis_progression
-    )
+    return GetAnalysisStatusUseCase(video_repository=video_repository, analysis_progression=analysis_progression)
 
 
 def get_save_video_use_case(
