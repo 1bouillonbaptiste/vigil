@@ -7,8 +7,11 @@ import numpy as np
 import pytest
 from starlette.testclient import TestClient
 
+from vigil.adapters.primary.events_subscriber.frame_analyzed_subscriber import FrameAnalyzedSubscriber
 from vigil.adapters.primary.fastapi.app_dependencies import (
+    _get_analysis_progression,
     _get_detection_model,
+    _get_domain_event_publisher,
     _get_frame_repository,
     _get_track_repository,
     _get_tracker,
@@ -18,9 +21,11 @@ from vigil.adapters.primary.fastapi.main import app
 from vigil.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
 from vigil.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.adapters.secondary.fake_tracker import FakeTracker
+from vigil.adapters.secondary.in_memory_analysis_progression_projection import InMemoryAnalysisProgressionProjection
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
+from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
 
 _VIDEO_FRAMES = 10
 _VIDEO_SIZE = (64, 64)
@@ -32,12 +37,18 @@ def vigil_client(tmp_path: Path) -> Generator[TestClient, None, None]:
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
     frame_repository = InMemoryFrameRepository()
     track_repository = InMemoryTrackRepository()
+    domain_event_publisher = InMemoryEventPublisher()
+    analysis_progression = InMemoryAnalysisProgressionProjection()
+
+    FrameAnalyzedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
 
     app.dependency_overrides[_get_video_repository] = lambda: video_repository
     app.dependency_overrides[_get_frame_repository] = lambda: frame_repository
     app.dependency_overrides[_get_track_repository] = lambda: track_repository
     app.dependency_overrides[_get_detection_model] = lambda: FakeDetectionModel()
     app.dependency_overrides[_get_tracker] = lambda: FakeTracker()
+    app.dependency_overrides[_get_analysis_progression] = lambda: analysis_progression
+    app.dependency_overrides[_get_domain_event_publisher] = lambda: domain_event_publisher
 
     yield TestClient(app)
 

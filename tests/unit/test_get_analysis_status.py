@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
+from vigil.adapters.secondary.in_memory_analysis_progression_projection import InMemoryAnalysisProgressionProjection
 from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame import Frame, FrameId
@@ -38,6 +39,7 @@ class ThisContext:
 
     frame_repository: InMemoryFrameRepository
     video_repository: StubVideoRepository
+    analysis_progression: InMemoryAnalysisProgressionProjection
     use_case: GetAnalysisStatusUseCase
 
 
@@ -45,13 +47,16 @@ class ThisContext:
 def this_context() -> ThisContext:
     frame_repository = InMemoryFrameRepository()
     video_repository = StubVideoRepository()
+    analysis_progression = InMemoryAnalysisProgressionProjection()
     use_case = GetAnalysisStatusUseCase(
         frame_repository=frame_repository,
         video_repository=video_repository,
+        analysis_progression=analysis_progression,
     )
     return ThisContext(
         frame_repository=frame_repository,
         video_repository=video_repository,
+        analysis_progression=analysis_progression,
         use_case=use_case,
     )
 
@@ -78,9 +83,9 @@ def test_should_return_zero_analysed_frames_when_no_frames_stored(this_context: 
 
 def test_should_return_analysed_frames_count(this_context: ThisContext) -> None:
     # Given
-    this_context.frame_repository.save(_create_frame(position=0))
-    this_context.frame_repository.save(_create_frame(position=1))
-    this_context.frame_repository.save(_create_frame(position=2))
+    this_context.analysis_progression.increment(VIDEO_ID)
+    this_context.analysis_progression.increment(VIDEO_ID)
+    this_context.analysis_progression.increment(VIDEO_ID)
 
     # When
     status = this_context.use_case.execute(VIDEO_ID)
@@ -92,9 +97,9 @@ def test_should_return_analysed_frames_count(this_context: ThisContext) -> None:
 def test_should_reflect_partial_analysis_progress(this_context: ThisContext) -> None:
     # Given: 3 frames stored out of 10 total
     this_context.video_repository.total_frames = 10
-    this_context.frame_repository.save(_create_frame(position=0))
-    this_context.frame_repository.save(_create_frame(position=1))
-    this_context.frame_repository.save(_create_frame(position=2))
+    this_context.analysis_progression.increment(VIDEO_ID)
+    this_context.analysis_progression.increment(VIDEO_ID)
+    this_context.analysis_progression.increment(VIDEO_ID)
 
     # When
     status = this_context.use_case.execute(VIDEO_ID)
