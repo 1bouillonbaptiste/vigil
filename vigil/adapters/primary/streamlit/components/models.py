@@ -36,13 +36,13 @@ class VideoStatus:
     """Current analysis progress for a video."""
 
     video_id: str
-    analysed_frames: int
+    analyzed_frames: int
     total_frames: int
 
     @property
     def is_complete(self) -> bool:
         """Return True when all frames have been processed."""
-        return self.total_frames > 0 and self.analysed_frames >= self.total_frames
+        return self.total_frames > 0 and self.analyzed_frames >= self.total_frames
 
 
 @dataclass

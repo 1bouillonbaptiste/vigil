@@ -33,6 +33,12 @@ def _get_track_repository(request: Request) -> TrackRepository:
 
 
 def _get_tracker() -> Tracker:
+    """Generate a new tracker per video analysis.
+
+    Tracker have notably hidden states (e.g. kalman filters), therefore reusing
+    the same tracker between analysis can lead to undesired side effects.
+    Creating  anew tracker costs near zero and avoids side effects.
+    """
     return make_bytetrack_tracker()
 
 

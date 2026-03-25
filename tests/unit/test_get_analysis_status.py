@@ -65,7 +65,7 @@ def _create_frame(position: int) -> Frame:
     )
 
 
-def test_should_return_zero_analysed_frames_when_no_frames_stored(this_context: ThisContext) -> None:
+def test_should_return_zero_analyzed_frames_when_no_frames_stored(this_context: ThisContext) -> None:
     # Given
     this_context.video_repository.total_frames = 5
 
@@ -73,10 +73,10 @@ def test_should_return_zero_analysed_frames_when_no_frames_stored(this_context: 
     status = this_context.use_case.execute(VIDEO_ID)
 
     # Then
-    assert status.analysed_frames == 0
+    assert status.analyzed_frames == 0
 
 
-def test_should_return_analysed_frames_count(this_context: ThisContext) -> None:
+def test_should_return_analyzed_frames_count(this_context: ThisContext) -> None:
     # Given
     this_context.analysis_progression.increment(VIDEO_ID)
     this_context.analysis_progression.increment(VIDEO_ID)
@@ -86,7 +86,7 @@ def test_should_return_analysed_frames_count(this_context: ThisContext) -> None:
     status = this_context.use_case.execute(VIDEO_ID)
 
     # Then
-    assert status.analysed_frames == 3
+    assert status.analyzed_frames == 3
 
 
 def test_should_reflect_partial_analysis_progress(this_context: ThisContext) -> None:
@@ -100,5 +100,5 @@ def test_should_reflect_partial_analysis_progress(this_context: ThisContext) -> 
     status = this_context.use_case.execute(VIDEO_ID)
 
     # Then
-    assert status.analysed_frames == 3
+    assert status.analyzed_frames == 3
     assert status.total_frames == 10

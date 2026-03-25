@@ -12,7 +12,7 @@ def video_status_from_payload(payload: dict[str, Any]) -> VideoStatus:
     """Map a raw /videos/{id}/status response dict to a VideoStatus."""
     return VideoStatus(
         video_id=payload["video_id"],
-        analysed_frames=payload["analysed_frames"],
+        analyzed_frames=payload["analyzed_frames"],
         total_frames=payload["total_frames"],
     )
 

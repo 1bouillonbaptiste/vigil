@@ -9,7 +9,7 @@ from vigil.business_logic.gateways.video_repository import VideoRepository
 class AnalysisStatus:
     """Progress report for a video analysis job."""
 
-    analysed_frames: int
+    analyzed_frames: int
     """Number of frames processed so far."""
 
     total_frames: int
@@ -30,6 +30,6 @@ class GetAnalysisStatusUseCase:
     def execute(self, video_id: UUID) -> AnalysisStatus:
         """Return how many frames have been analyzed out of the total."""
         return AnalysisStatus(
-            analysed_frames=self._analysis_progression.count(video_id),
+            analyzed_frames=self._analysis_progression.count(video_id),
             total_frames=self._video_repository.frame_count(video_id),
         )
