@@ -17,6 +17,7 @@ FRAME_ID = FrameId(UUID("8d672f18-906e-4ff9-a06d-938898683720"))
 def _detection(bbox: BoundingBox) -> Detection:
     return Detection(
         frame_id=FRAME_ID,
+        frame_position=0,
         prediction=Prediction(bbox=bbox, confidence=0.8, label=ClassLabel.PERSON),
     )
 

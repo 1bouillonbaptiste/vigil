@@ -42,5 +42,7 @@ class Detection:
 
     frame_id: UUID
     """Identifier of the frame the detection was observed in."""
+    frame_position: int
+    """Position of the frame in the video sequence."""
     prediction: Prediction
     """Model output associated with this detection."""

@@ -2,11 +2,14 @@ from fastapi import Depends
 from starlette.requests import Request
 
 from vigil.adapters.secondary.bytetrack_tracker import make_bytetrack_tracker
+from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 from vigil.business_logic.gateways.detection_model import DetectionModel
-from vigil.business_logic.gateways.frame_repository import FrameRepository
+from vigil.business_logic.gateways.domain_event_publisher import DomainEventPublisher
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_repository import VideoRepository
+from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
+from vigil.business_logic.services.analysis_progress_projection import AnalysisProgressProjection
 from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
@@ -19,8 +22,12 @@ def _get_video_repository(request: Request) -> VideoRepository:
     return request.app.state.video_repository
 
 
-def _get_frame_repository(request: Request) -> FrameRepository:
-    return request.app.state.frame_repository
+def _get_publisher(request: Request) -> DomainEventPublisher[FrameAnalyzed]:
+    return request.app.state.publisher
+
+
+def _get_progress_projection(request: Request) -> AnalysisProgressProjection:
+    return request.app.state.progress_projection
 
 
 def _get_detection_model(request: Request) -> DetectionModel:
@@ -40,11 +47,11 @@ def _build_detection_service(detection_model=Depends(_get_detection_model)) -> D
 
 
 def get_analysis_status_use_case(
-    frame_repository=Depends(_get_frame_repository),
+    progress_projection=Depends(_get_progress_projection),
     video_repository=Depends(_get_video_repository),
 ) -> GetAnalysisStatusUseCase:
     """Get the `GetAnalysisStatusUseCase`."""
-    return GetAnalysisStatusUseCase(frame_repository=frame_repository, video_repository=video_repository)
+    return GetAnalysisStatusUseCase(progress_projection=progress_projection, video_repository=video_repository)
 
 
 def get_save_video_use_case(
@@ -63,7 +70,7 @@ def get_video_tracks_use_case(
 
 def get_video_analysis_workflow(
     video_repository=Depends(_get_video_repository),
-    frame_repository=Depends(_get_frame_repository),
+    publisher=Depends(_get_publisher),
     detection_service=Depends(_build_detection_service),
     track_repository=Depends(_get_track_repository),
     tracker=Depends(_get_tracker),
@@ -80,7 +87,7 @@ def get_video_analysis_workflow(
     )
     return VideoAnalysisWorkflow(
         video_repository=video_repository,
-        frame_repository=frame_repository,
+        publisher=publisher,
         detection_service=detection_service,
         track_use_case=track_use_case,
         batch_size=8,

@@ -6,10 +6,11 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
+from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 from vigil.business_logic.gateways.video_repository import VideoRepository
-from vigil.business_logic.models.frame import Frame, FrameId
+from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
 from vigil.business_logic.models.video_source import VideoSource
+from vigil.business_logic.services.analysis_progress_projection import AnalysisProgressProjection
 from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 
@@ -36,36 +37,37 @@ class StubVideoRepository(VideoRepository):
 class ThisContext:
     """Context for testing GetAnalysisStatusUseCase."""
 
-    frame_repository: InMemoryFrameRepository
+    publisher: InMemoryDomainEventPublisher[FrameAnalyzed]
     video_repository: StubVideoRepository
     use_case: GetAnalysisStatusUseCase
 
 
 @pytest.fixture
 def this_context() -> ThisContext:
-    frame_repository = InMemoryFrameRepository()
+    publisher: InMemoryDomainEventPublisher[FrameAnalyzed] = InMemoryDomainEventPublisher()
+    progress_projection = AnalysisProgressProjection()
+    publisher.subscribe(progress_projection)
     video_repository = StubVideoRepository()
     use_case = GetAnalysisStatusUseCase(
-        frame_repository=frame_repository,
+        progress_projection=progress_projection,
         video_repository=video_repository,
     )
     return ThisContext(
-        frame_repository=frame_repository,
+        publisher=publisher,
         video_repository=video_repository,
         use_case=use_case,
     )
 
 
-def _create_frame(position: int) -> Frame:
-    return Frame(
-        id=FrameId(IdFactory.new_frame_id(video_id=VIDEO_ID, position=position)),
+def _make_event(position: int) -> FrameAnalyzed:
+    return FrameAnalyzed(
         video_id=VIDEO_ID,
+        frame_id=IdFactory.new_frame_id(video_id=VIDEO_ID, position=position),
         position=position,
-        data=np.array([position], dtype=np.uint8),
     )
 
 
-def test_should_return_zero_analysed_frames_when_no_frames_stored(this_context: ThisContext) -> None:
+def test_should_return_zero_analysed_frames_when_no_events_published(this_context: ThisContext) -> None:
     # Given
     this_context.video_repository.total_frames = 5
 
@@ -78,9 +80,9 @@ def test_should_return_zero_analysed_frames_when_no_frames_stored(this_context: 
 
 def test_should_return_analysed_frames_count(this_context: ThisContext) -> None:
     # Given
-    this_context.frame_repository.save(_create_frame(position=0))
-    this_context.frame_repository.save(_create_frame(position=1))
-    this_context.frame_repository.save(_create_frame(position=2))
+    this_context.publisher.publish(_make_event(position=0))
+    this_context.publisher.publish(_make_event(position=1))
+    this_context.publisher.publish(_make_event(position=2))
 
     # When
     status = this_context.use_case.execute(VIDEO_ID)
@@ -90,11 +92,11 @@ def test_should_return_analysed_frames_count(this_context: ThisContext) -> None:
 
 
 def test_should_reflect_partial_analysis_progress(this_context: ThisContext) -> None:
-    # Given: 3 frames stored out of 10 total
+    # Given
     this_context.video_repository.total_frames = 10
-    this_context.frame_repository.save(_create_frame(position=0))
-    this_context.frame_repository.save(_create_frame(position=1))
-    this_context.frame_repository.save(_create_frame(position=2))
+    this_context.publisher.publish(_make_event(position=0))
+    this_context.publisher.publish(_make_event(position=1))
+    this_context.publisher.publish(_make_event(position=2))
 
     # When
     status = this_context.use_case.execute(VIDEO_ID)

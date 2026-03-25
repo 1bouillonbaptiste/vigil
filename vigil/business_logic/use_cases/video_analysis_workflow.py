@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from vigil.business_logic.gateways.frame_repository import FrameRepository
+from vigil.business_logic.gateways.domain_event_publisher import DomainEventPublisher
 from vigil.business_logic.gateways.video_repository import VideoRepository
 from vigil.business_logic.models.frame import Frame
+from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
 from vigil.business_logic.services.detection_service import DetectionService
 from vigil.business_logic.services.id_factory import IdFactory
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
@@ -17,13 +18,13 @@ class VideoAnalysisWorkflow:
     def __init__(
         self,
         video_repository: VideoRepository,
-        frame_repository: FrameRepository,
+        publisher: DomainEventPublisher[FrameAnalyzed],
         detection_service: DetectionService,
         track_use_case: TrackObjectsUseCase,
         batch_size: int,
     ) -> None:
         self._video_repository = video_repository
-        self._frame_repository = frame_repository
+        self._publisher = publisher
         self._detection_service = detection_service
         self._track_use_case = track_use_case
         self._batch_size = batch_size
@@ -39,7 +40,7 @@ class VideoAnalysisWorkflow:
                 position=position,
                 data=data,
             )
-            self._frame_repository.save(frame)
+            self._publisher.publish(FrameAnalyzed(video_id=video_id, frame_id=frame.id, position=position))
             batch.append(frame)
 
             if len(batch) == self._batch_size:

@@ -75,6 +75,7 @@ class ShouldMapBatchOutputToDetectionsCases:
         expected = [
             Detection(
                 frame_id=FRAME_ID_0,
+                frame_position=0,
                 prediction=Prediction(
                     bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
                     confidence=0.5,
@@ -92,6 +93,7 @@ class ShouldMapBatchOutputToDetectionsCases:
         expected = [
             Detection(
                 frame_id=FRAME_ID_0,
+                frame_position=0,
                 prediction=Prediction(
                     bbox=BoundingBox(center_x=0, center_y=0, width=1, height=1),
                     confidence=0.5,
@@ -100,6 +102,7 @@ class ShouldMapBatchOutputToDetectionsCases:
             ),
             Detection(
                 frame_id=FRAME_ID_1,
+                frame_position=1,
                 prediction=Prediction(
                     bbox=BoundingBox(center_x=1, center_y=0, width=1, height=1),
                     confidence=0.5,

@@ -9,7 +9,8 @@ from starlette.testclient import TestClient
 
 from vigil.adapters.primary.fastapi.app_dependencies import (
     _get_detection_model,
-    _get_frame_repository,
+    _get_progress_projection,
+    _get_publisher,
     _get_track_repository,
     _get_tracker,
     _get_video_repository,
@@ -18,9 +19,11 @@ from vigil.adapters.primary.fastapi.main import app
 from vigil.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
 from vigil.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.adapters.secondary.fake_tracker import FakeTracker
-from vigil.adapters.secondary.in_memory_frame_repository import InMemoryFrameRepository
+from vigil.adapters.secondary.in_memory_domain_event_publisher import InMemoryDomainEventPublisher
 from vigil.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.adapters.secondary.local_video_repository import LocalVideoRepository
+from vigil.business_logic.models.frame_analyzed import FrameAnalyzed
+from vigil.business_logic.services.analysis_progress_projection import AnalysisProgressProjection
 
 _VIDEO_FRAMES = 10
 _VIDEO_SIZE = (64, 64)
@@ -30,11 +33,14 @@ _VIDEO_SIZE = (64, 64)
 def vigil_client(tmp_path: Path) -> Generator[TestClient, None, None]:
     """TestClient wired with fake/in-memory infrastructure."""
     video_repository = LocalVideoRepository(storage_dir=tmp_path)
-    frame_repository = InMemoryFrameRepository()
+    publisher: InMemoryDomainEventPublisher[FrameAnalyzed] = InMemoryDomainEventPublisher()
+    progress_projection = AnalysisProgressProjection()
+    publisher.subscribe(progress_projection)
     track_repository = InMemoryTrackRepository()
 
     app.dependency_overrides[_get_video_repository] = lambda: video_repository
-    app.dependency_overrides[_get_frame_repository] = lambda: frame_repository
+    app.dependency_overrides[_get_publisher] = lambda: publisher
+    app.dependency_overrides[_get_progress_projection] = lambda: progress_projection
     app.dependency_overrides[_get_track_repository] = lambda: track_repository
     app.dependency_overrides[_get_detection_model] = lambda: FakeDetectionModel()
     app.dependency_overrides[_get_tracker] = lambda: FakeTracker()
