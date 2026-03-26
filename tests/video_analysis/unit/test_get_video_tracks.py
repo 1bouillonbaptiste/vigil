@@ -22,13 +22,12 @@ def _detection(bbox: BoundingBox) -> Detection:
     )
 
 
-def _track(video_id: UUID, bbox: BoundingBox, closed: bool = False) -> Track:
+def _track(video_id: UUID, bbox: BoundingBox) -> Track:
     detection = _detection(bbox)
     return Track(
         id=IdFactory.new_track_id(detection),
         video_id=video_id,
         detections=(detection,),
-        closed=closed,
     )
 
 
@@ -52,11 +51,11 @@ def test_returns_all_tracks_for_video(repository: InMemoryTrackRepository):
     assert use_case.execute(video_id=VIDEO_ID) == [track]
 
 
-def test_returns_both_open_and_closed_tracks(repository: InMemoryTrackRepository):
-    open_track = _track(VIDEO_ID, BoundingBox(1, 1, 1, 1))
-    closed_track = _track(VIDEO_ID, BoundingBox(2, 2, 2, 2), closed=True)
-    repository.save(open_track)
-    repository.save(closed_track)
+def test_returns_multiple_tracks_for_same_video(repository: InMemoryTrackRepository):
+    track_a = _track(VIDEO_ID, BoundingBox(1, 1, 1, 1))
+    track_b = _track(VIDEO_ID, BoundingBox(2, 2, 2, 2))
+    repository.save(track_a)
+    repository.save(track_b)
 
     use_case = GetVideoTracksUseCase(track_repository=repository)
 

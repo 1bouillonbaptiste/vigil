@@ -20,7 +20,7 @@ def make_detection(**overrides) -> DetectionData:
 
 
 def make_track(**overrides) -> TrackData:
-    defaults = TrackData(id="track-1", closed=True, detections=(make_detection(),))
+    defaults = TrackData(id="track-1", detections=(make_detection(),))
     return replace(defaults, **overrides)
 
 

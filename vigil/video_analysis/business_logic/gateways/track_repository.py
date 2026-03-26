@@ -15,10 +15,6 @@ class TrackRepository(Protocol):
         """Get a track from the repository."""
         ...
 
-    def list_open_tracks(self, video_id: UUID) -> list[Track]:
-        """List all open tracks for a given video."""
-        ...
-
     def list_by_video_id(self, video_id: UUID) -> list[Track]:
-        """List all tracks (open and closed) for a given video."""
+        """List all tracks for a given video."""
         ...

@@ -27,7 +27,6 @@ class TrackData:
     """An object track composed of per-frame detections."""
 
     id: str
-    closed: bool
     detections: tuple[DetectionData, ...]
 
 

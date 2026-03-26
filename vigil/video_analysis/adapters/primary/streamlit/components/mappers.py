@@ -22,7 +22,6 @@ def tracks_from_payload(payload: dict[str, Any]) -> list[TrackData]:
     return [
         TrackData(
             id=track["id"],
-            closed=track["closed"],
             detections=tuple(
                 DetectionData(
                     frame_position=det["frame_position"],
