@@ -6,7 +6,6 @@ import numpy.typing as npt
 from ultralytics.trackers.byte_tracker import BYTETracker
 
 from vigil.video_analysis.business_logic.models.detection import ClassLabel, Detection
-from vigil.video_analysis.business_logic.models.track import Track
 
 _CLASS_TO_INT: dict[ClassLabel, int] = {ClassLabel.PERSON: 0, ClassLabel.VEHICLE: 1}
 
@@ -53,57 +52,39 @@ def _to_bytetrack_results(detections: list[Detection]) -> _ByteTrackResults:
 class ByteTrackTracker:
     """Tracker adapter backed by ByteTrack.
 
-    ByteTrack manages its own internal Kalman-filter state and assigns integer
-    track IDs.  This adapter maps those integer IDs back to domain Tracks by
-    storing the spawning Detection for each ByteTrack ID, then searching the
-    tracks list for the Track whose first Detection matches.
+    Walks the detection sequence frame by frame, feeds each frame to
+    BYTETracker, and groups detections that ByteTrack assigns to the same
+    integer track ID. The grouping is returned as a list of detection
+    sequences — one per tracked object.
 
-    Assumption: the caller creates a new domain Track for every Detection that
-    this adapter returns as an orphan (i.e. absent from the matched pairs).
-    The mapping from ByteTrack integer IDs to domain Tracks relies on finding,
-    in the next call's ``tracks`` list, the Track whose first detection equals
-    the spawning detection recorded here.  If the caller does not create that
-    Track, the ByteTrack ID will never resolve and the object will be treated
-    as a new track on every subsequent frame.
+    This adapter is stateful (Kalman filters). Use a fresh instance per
+    video analysis via ``make_bytetrack_tracker()``.
     """
 
     def __init__(self, bytetracker: BYTETracker) -> None:
         self._bytetracker = bytetracker
-        self._track_origin: dict[int, Detection] = {}  # bytetrack_id → spawning detection
 
-    def update(self, tracks: list[Track], detections: list[Detection]) -> list[tuple[Track, Detection]]:
-        """Assign new detections to existing open tracks via ByteTrack."""
+    def track(self, detections: list[Detection]) -> list[list[Detection]]:
+        """Group detections belonging to the same object across frames."""
         if not detections:
             return []
 
-        results = _to_bytetrack_results(detections)
-        raw = self._bytetracker.update(results)  # (M, 8): [x1,y1,x2,y2,track_id,score,cls,det_idx]
+        by_frame: dict[int, list[Detection]] = {}
+        for d in detections:
+            by_frame.setdefault(d.frame_position, []).append(d)
 
-        if len(raw) == 0:
-            return []
+        groups: dict[int, list[Detection]] = {}
 
-        tracks_by_first_detection: dict[Detection, Track] = {t.detections[0]: t for t in tracks}
-        matches: list[tuple[Track, Detection]] = []
+        for frame_pos in sorted(by_frame):
+            frame_detections = by_frame[frame_pos]
+            raw = self._bytetracker.update(_to_bytetrack_results(frame_detections))
 
-        for row in raw:
-            bytetrack_id = int(row[_COL_TRACK_ID])
-            det_idx = int(row[_COL_DET_IDX])
-            detection = detections[det_idx]
+            for row in raw:
+                bytetrack_id = int(row[_COL_TRACK_ID])
+                det_idx = int(row[_COL_DET_IDX])
+                groups.setdefault(bytetrack_id, []).append(frame_detections[det_idx])
 
-            if bytetrack_id not in self._track_origin:
-                # New internal track — record the spawning detection so we can
-                # locate the domain Track on the next frame.
-                self._track_origin[bytetrack_id] = detection
-                continue
-
-            domain_track = tracks_by_first_detection.get(self._track_origin[bytetrack_id])
-            if domain_track is None:
-                # Domain track was closed or not yet created; skip.
-                continue
-
-            matches.append((domain_track, detection))
-
-        return matches
+        return list(groups.values())
 
 
 def make_bytetrack_tracker(frame_rate: int = 30) -> ByteTrackTracker:
