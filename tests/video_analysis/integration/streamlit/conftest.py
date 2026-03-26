@@ -7,7 +7,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
-from vigil.video_analysis.adapters.primary.events_subscriber.frame_analyzed_subscriber import FrameAnalyzedSubscriber
+from vigil.video_analysis.adapters.primary.events_subscriber.frame_detected_subscriber import FrameDetectedSubscriber
 from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import (
     _get_analysis_progression,
     _get_detection_model,
@@ -37,7 +37,7 @@ def vigil_client(tmp_path: Path) -> Generator[TestClient, None, None]:
     domain_event_publisher = InMemoryEventPublisher()
     analysis_progression = InMemoryAnalysisProgressionProjection()
 
-    FrameAnalyzedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
+    FrameDetectedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
 
     app.dependency_overrides[_get_video_repository] = lambda: video_repository
     app.dependency_overrides[_get_track_repository] = lambda: track_repository

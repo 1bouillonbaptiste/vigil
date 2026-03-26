@@ -12,7 +12,7 @@ from vigil.video_analysis.business_logic.gateways.detection_model import Detecti
 from vigil.video_analysis.business_logic.gateways.tracker import Tracker
 from vigil.video_analysis.business_logic.gateways.video_repository import VideoRepository
 from vigil.video_analysis.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
-from vigil.video_analysis.business_logic.models.frame_analyzed import FrameAnalyzed
+from vigil.video_analysis.business_logic.models.frame_detected import FrameDetected
 from vigil.video_analysis.business_logic.models.track import Track
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
 from vigil.video_analysis.business_logic.services.detection_service import DetectionService
@@ -67,14 +67,14 @@ class SpyTracker(Tracker):
         return []
 
 
-class SpyFrameAnalyzed:
+class SpyFrameDetected:
     def __init__(self) -> None:
-        self._frame_analyzed: list[FrameAnalyzed] = []
+        self._frame_analyzed: list[FrameDetected] = []
 
-    def __call__(self, event: FrameAnalyzed) -> None:
+    def __call__(self, event: FrameDetected) -> None:
         self._frame_analyzed.append(event)
 
-    def to_list(self) -> list[FrameAnalyzed]:
+    def to_list(self) -> list[FrameDetected]:
         """Get the saved events."""
         return self._frame_analyzed.copy()
 
@@ -83,7 +83,7 @@ class SpyFrameAnalyzed:
 class ThisContext:
     """Context for testing VideoAnalysisWorkflow."""
 
-    frame_analyzed_events: SpyFrameAnalyzed
+    frame_analyzed_events: SpyFrameDetected
     video_repository: StubVideoRepository
     spy_tracker: SpyTracker
     workflow: VideoAnalysisWorkflow
@@ -101,7 +101,7 @@ def this_context() -> ThisContext:
         tracker=spy_tracker,
     )
 
-    frame_analyzed_events = SpyFrameAnalyzed()
+    frame_analyzed_events = SpyFrameDetected()
     domain_event_publisher.subscribe(handler=frame_analyzed_events)
 
     workflow = VideoAnalysisWorkflow(
@@ -129,8 +129,8 @@ def test_should_process_all_frames(this_context: ThisContext) -> None:
 
     # Then
     assert this_context.frame_analyzed_events.to_list() == [
-        FrameAnalyzed(video_id=VIDEO_ID, frame_position=0),
-        FrameAnalyzed(video_id=VIDEO_ID, frame_position=1),
+        FrameDetected(video_id=VIDEO_ID, frame_position=0),
+        FrameDetected(video_id=VIDEO_ID, frame_position=1),
     ]
 
 
@@ -142,7 +142,7 @@ def test_should_flush_partial_batch(this_context: ThisContext) -> None:
     this_context.workflow.execute(VIDEO_ID)
 
     # Then: single frame was still tracked
-    assert this_context.frame_analyzed_events.to_list() == [FrameAnalyzed(video_id=VIDEO_ID, frame_position=0)]
+    assert this_context.frame_analyzed_events.to_list() == [FrameDetected(video_id=VIDEO_ID, frame_position=0)]
 
 
 def test_should_handle_empty_video(this_context: ThisContext) -> None:
@@ -164,7 +164,7 @@ def test_should_run_detection_per_batch(this_context: ThisContext) -> None:
 
     # Then
     assert this_context.frame_analyzed_events.to_list() == [
-        FrameAnalyzed(video_id=VIDEO_ID, frame_position=0),
-        FrameAnalyzed(video_id=VIDEO_ID, frame_position=1),
-        FrameAnalyzed(video_id=VIDEO_ID, frame_position=2),
+        FrameDetected(video_id=VIDEO_ID, frame_position=0),
+        FrameDetected(video_id=VIDEO_ID, frame_position=1),
+        FrameDetected(video_id=VIDEO_ID, frame_position=2),
     ]

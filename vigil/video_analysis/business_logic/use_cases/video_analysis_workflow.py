@@ -3,7 +3,7 @@ from uuid import UUID
 from vigil.shared_kernel.gateways.domain_event_publisher import DomainEventPublisher
 from vigil.video_analysis.business_logic.gateways.video_repository import VideoRepository
 from vigil.video_analysis.business_logic.models.frame import Frame
-from vigil.video_analysis.business_logic.models.frame_analyzed import FrameAnalyzed
+from vigil.video_analysis.business_logic.models.frame_detected import FrameDetected
 from vigil.video_analysis.business_logic.services.detection_service import DetectionService
 from vigil.video_analysis.business_logic.services.id_factory import IdFactory
 from vigil.video_analysis.business_logic.use_cases.track_objects import TrackObjectsUseCase
@@ -56,5 +56,5 @@ class VideoAnalysisWorkflow:
             frame_detections = [d for d in detections if d.frame_id == frame.id]
             self._track_use_case.execute(video_id=frame.video_id, detections=frame_detections)
             self._domain_event_publisher.publish(
-                event=FrameAnalyzed(video_id=frame.video_id, frame_position=frame.position)
+                event=FrameDetected(video_id=frame.video_id, frame_position=frame.position)
             )
