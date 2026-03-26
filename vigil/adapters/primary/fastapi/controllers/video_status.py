@@ -13,7 +13,7 @@ class VideoStatusResponse(BaseModel):
     """Response returned when the analysis status of a video is retrieved."""
 
     video_id: UUID
-    analysed_frames: int
+    analyzed_frames: int
     total_frames: int
 
 
@@ -25,7 +25,7 @@ class VideoStatusResponse(BaseModel):
     description=(
         "Return the current analysis progress for the given video. "
         "Poll this endpoint to drive a progress indicator. "
-        "Once `analysed_frames == total_frames`, tracks are available via `GET /videos/{video_id}/tracks`."
+        "Once `analyzed_frames == total_frames`, tracks are available via `GET /videos/{video_id}/tracks`."
     ),
     responses={
         200: {"description": "Status retrieved successfully."},
@@ -44,6 +44,6 @@ def get_video_status(
 
     return VideoStatusResponse(
         video_id=video_id,
-        analysed_frames=analysis.analysed_frames,
+        analyzed_frames=analysis.analyzed_frames,
         total_frames=analysis.total_frames,
     )

@@ -29,6 +29,7 @@ class DetectionService:
                 detections.append(
                     Detection(
                         frame_id=frame.id,
+                        frame_position=frame.position,
                         prediction=prediction,
                     )
                 )

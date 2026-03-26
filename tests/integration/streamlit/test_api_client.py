@@ -22,7 +22,7 @@ def test_get_status_reports_all_frames_analysed_after_upload(vigil_client: TestC
 
     status = client.get_status(video_id)
 
-    assert status.analysed_frames == status.total_frames
+    assert status.analyzed_frames == status.total_frames
 
 
 def test_get_status_is_complete_after_full_analysis(vigil_client: TestClient, video_bytes: bytes) -> None:

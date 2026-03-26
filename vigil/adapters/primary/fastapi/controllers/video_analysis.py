@@ -28,7 +28,7 @@ class AnalyseVideoResponse(BaseModel):
     summary="Submit a video for analysis",
     description=(
         "Upload a video file to start object detection and tracking. "
-        "The video is saved and analysed asynchronously — the response is "
+        "The video is saved and analyzed asynchronously — the response is "
         "returned immediately with a `video_id` that can be used to retrieve "
         "results once processing is complete."
     ),

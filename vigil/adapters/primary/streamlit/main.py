@@ -101,11 +101,11 @@ def _status_poller() -> None:
     for video_id, entry in st.session_state.get("videos", {}).items():
         if entry.status is not None and entry.status.is_complete:
             continue
-        previous = entry.status.analysed_frames if entry.status else -1
+        previous = entry.status.analyzed_frames if entry.status else -1
         new_status = entry.status
         with contextlib.suppress(VigilAPIError):
             new_status = client.get_status(entry.video_id)
-        current = new_status.analysed_frames if new_status else -1
+        current = new_status.analyzed_frames if new_status else -1
         if current != previous:
             st.session_state.videos[video_id] = replace(entry, status=new_status)
             st.rerun()
@@ -173,7 +173,7 @@ with left:
                         st.session_state.rendered_path = None
                 else:
                     if status is not None and status.total_frames > 0:
-                        pct = int(100 * status.analysed_frames / status.total_frames)
+                        pct = int(100 * status.analyzed_frames / status.total_frames)
                         st.progress(pct / 100, text=f"{pct}%")
                     else:
                         st.caption("queued…")

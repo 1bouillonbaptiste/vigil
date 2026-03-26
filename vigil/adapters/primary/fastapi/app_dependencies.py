@@ -2,8 +2,8 @@ from fastapi import Depends
 from starlette.requests import Request
 
 from vigil.adapters.secondary.bytetrack_tracker import make_bytetrack_tracker
+from vigil.business_logic.gateways.analysis_progression_projection import AnalysisProgressionProjection
 from vigil.business_logic.gateways.detection_model import DetectionModel
-from vigil.business_logic.gateways.frame_repository import FrameRepository
 from vigil.business_logic.gateways.track_repository import TrackRepository
 from vigil.business_logic.gateways.tracker import Tracker
 from vigil.business_logic.gateways.video_repository import VideoRepository
@@ -13,14 +13,15 @@ from vigil.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCas
 from vigil.business_logic.use_cases.save_video import SaveVideoUseCase
 from vigil.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
+from vigil.shared_kernel.gateways.domain_event_publisher import DomainEventPublisher
+
+
+def _get_domain_event_publisher(request: Request) -> DomainEventPublisher:
+    return request.app.state.domain_event_publisher
 
 
 def _get_video_repository(request: Request) -> VideoRepository:
     return request.app.state.video_repository
-
-
-def _get_frame_repository(request: Request) -> FrameRepository:
-    return request.app.state.frame_repository
 
 
 def _get_detection_model(request: Request) -> DetectionModel:
@@ -32,7 +33,17 @@ def _get_track_repository(request: Request) -> TrackRepository:
 
 
 def _get_tracker() -> Tracker:
+    """Generate a new tracker per video analysis.
+
+    Tracker have notably hidden states (e.g. kalman filters), therefore reusing
+    the same tracker between analysis can lead to undesired side effects.
+    Creating  anew tracker costs near zero and avoids side effects.
+    """
     return make_bytetrack_tracker()
+
+
+def _get_analysis_progression(request: Request) -> AnalysisProgressionProjection:
+    return request.app.state.analysis_progression
 
 
 def _build_detection_service(detection_model=Depends(_get_detection_model)) -> DetectionService:
@@ -40,11 +51,11 @@ def _build_detection_service(detection_model=Depends(_get_detection_model)) -> D
 
 
 def get_analysis_status_use_case(
-    frame_repository=Depends(_get_frame_repository),
     video_repository=Depends(_get_video_repository),
+    analysis_progression=Depends(_get_analysis_progression),
 ) -> GetAnalysisStatusUseCase:
     """Get the `GetAnalysisStatusUseCase`."""
-    return GetAnalysisStatusUseCase(frame_repository=frame_repository, video_repository=video_repository)
+    return GetAnalysisStatusUseCase(video_repository=video_repository, analysis_progression=analysis_progression)
 
 
 def get_save_video_use_case(
@@ -62,8 +73,8 @@ def get_video_tracks_use_case(
 
 
 def get_video_analysis_workflow(
+    domain_event_publisher=Depends(_get_domain_event_publisher),
     video_repository=Depends(_get_video_repository),
-    frame_repository=Depends(_get_frame_repository),
     detection_service=Depends(_build_detection_service),
     track_repository=Depends(_get_track_repository),
     tracker=Depends(_get_tracker),
@@ -79,8 +90,8 @@ def get_video_analysis_workflow(
         tracker=tracker,
     )
     return VideoAnalysisWorkflow(
+        domain_event_publisher=domain_event_publisher,
         video_repository=video_repository,
-        frame_repository=frame_repository,
         detection_service=detection_service,
         track_use_case=track_use_case,
         batch_size=8,
