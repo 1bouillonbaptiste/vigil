@@ -1,22 +1,24 @@
 from typing import Protocol
 
 from vigil.video_analysis.business_logic.models.detection import Detection
-from vigil.video_analysis.business_logic.models.track import Track
 
 
 class Tracker(Protocol):
-    """Interface for trackers.
+    """Interface for object trackers.
 
-    Each tracker implementation is responsible to match new detections to
-    existing tracks.
+    Groups detections belonging to the same object across frames.
+
+    Implementations MAY be stateful (e.g. Kalman filters). If so, a fresh
+    instance must be used per video analysis — reusing an instance across videos
+    produces incorrect results.
     """
 
-    def update(self, tracks: list[Track], detections: list[Detection]) -> list[tuple[Track, Detection]]:
-        """Assign new detections to existing open tracks.
+    def track(self, detections: list[Detection]) -> list[list[Detection]]:
+        """Group detections belonging to the same object.
 
-        Returns a list of (track, detection) pairs. Each pair means the
-        detection continues the track. Tracks absent from the result missed this
-        frame; detections absent from the result are orphans that start new
-        tracks.
+        ``detections`` must be ordered by ``frame_position``.
+
+        Returns one list per tracked object; each inner list contains the
+        detections for that object ordered by ``frame_position``.
         """
         ...

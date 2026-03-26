@@ -1,19 +1,17 @@
 from vigil.video_analysis.business_logic.gateways.tracker import Tracker
-from vigil.video_analysis.business_logic.models.detection import Detection
-from vigil.video_analysis.business_logic.models.track import Track
+from vigil.video_analysis.business_logic.models.detection import BoundingBox, Detection
 
 
 class FakeTracker(Tracker):
-    """Tracker for testing purpose.
+    """Tracker for testing purposes.
 
-    Matches a track to a detection when their bounding boxes are equal.
+    Groups detections by bounding box: detections sharing the same bbox
+    across frames are considered the same object.
     """
 
-    def update(self, tracks: list[Track], detections: list[Detection]) -> list[tuple[Track, Detection]]:
-        """Match tracks to detections sharing the same bounding box."""
-        return [
-            (track, detection)
-            for track in tracks
-            for detection in detections
-            if track.detections[-1].prediction.bbox == detection.prediction.bbox
-        ]
+    def track(self, detections: list[Detection]) -> list[list[Detection]]:
+        """Group detections by bbox across frames."""
+        groups: dict[BoundingBox, list[Detection]] = {}
+        for d in sorted(detections, key=lambda d: d.frame_position):
+            groups.setdefault(d.prediction.bbox, []).append(d)
+        return list(groups.values())

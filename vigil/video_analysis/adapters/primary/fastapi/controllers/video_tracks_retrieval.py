@@ -36,7 +36,6 @@ class TrackResponse:
     """Serialised track for an API response."""
 
     id: UUID
-    closed: bool
     detections: list[DetectionResponse]
 
 
@@ -65,7 +64,6 @@ def get_video_tracks(
         tracks=[
             TrackResponse(
                 id=track.id,
-                closed=track.closed,
                 detections=[
                     DetectionResponse(
                         frame_position=detection.frame_position,

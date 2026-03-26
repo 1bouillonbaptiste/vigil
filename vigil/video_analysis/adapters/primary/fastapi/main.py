@@ -6,7 +6,7 @@ from typing import Final
 from fastapi import FastAPI
 
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
-from vigil.video_analysis.adapters.primary.events_subscriber.frame_analyzed_subscriber import FrameAnalyzedSubscriber
+from vigil.video_analysis.adapters.primary.events_subscriber.frame_detected_subscriber import FrameDetectedSubscriber
 from vigil.video_analysis.adapters.primary.fastapi.config import AppConfig
 from vigil.video_analysis.adapters.primary.fastapi.controllers import (
     video_analysis,
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     track_repository = InMemoryTrackRepository()
     analysis_progression = InMemoryAnalysisProgressionProjection()
 
-    FrameAnalyzedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
+    FrameDetectedSubscriber(publisher=domain_event_publisher, analysis_progression=analysis_progression).subscribe()
 
     app.state.video_repository = video_repository
     app.state.detection_model = detection_model

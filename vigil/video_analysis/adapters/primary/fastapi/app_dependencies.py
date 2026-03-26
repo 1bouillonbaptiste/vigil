@@ -12,7 +12,6 @@ from vigil.video_analysis.business_logic.services.detection_service import Detec
 from vigil.video_analysis.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.video_analysis.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
 from vigil.video_analysis.business_logic.use_cases.save_video import SaveVideoUseCase
-from vigil.video_analysis.business_logic.use_cases.track_objects import TrackObjectsUseCase
 from vigil.video_analysis.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
 
 
@@ -35,9 +34,9 @@ def _get_track_repository(request: Request) -> TrackRepository:
 def _get_tracker() -> Tracker:
     """Generate a new tracker per video analysis.
 
-    Tracker have notably hidden states (e.g. kalman filters), therefore reusing
-    the same tracker between analysis can lead to undesired side effects.
-    Creating  anew tracker costs near zero and avoids side effects.
+    Trackers may be stateful (e.g. Kalman filters); reusing one across analyses
+    produces incorrect results. Creating a fresh instance costs near zero and
+    guarantees isolation.
     """
     return make_bytetrack_tracker()
 
@@ -82,17 +81,13 @@ def get_video_analysis_workflow(
     """Get the `VideoAnalysisWorkflow`.
 
     A fresh tracker is injected per request so that each video analysis gets
-    isolated per-video state. Trackers are stateful (Kalman filters, track
-    history) and must never be shared across concurrent analyses.
+    isolated per-video state.
     """
-    track_use_case = TrackObjectsUseCase(
-        track_repository=track_repository,
-        tracker=tracker,
-    )
     return VideoAnalysisWorkflow(
         domain_event_publisher=domain_event_publisher,
         video_repository=video_repository,
         detection_service=detection_service,
-        track_use_case=track_use_case,
+        tracker=tracker,
+        track_repository=track_repository,
         batch_size=8,
     )
