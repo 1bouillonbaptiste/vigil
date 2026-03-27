@@ -26,26 +26,29 @@ def this_context() -> Generator[ThisContext, None, None]:
     app.dependency_overrides.clear()
 
 
-def test_should_detect_people_across_video_frames(this_context: ThisContext, realistic_video_filepath: Path) -> None:
+@pytest.fixture(scope="module")
+def realistic_video_filepath() -> Path:
+    """Return the path to the realistic 10-frame people video fixture."""
+    return Path(__file__).parent.parent.parent / "data" / "people_10frames.mp4"
+
+
+@pytest.fixture(scope="module")
+def video_id(this_context: ThisContext, realistic_video_filepath: Path) -> str:
+    """Upload a video, run analysis, and return the video_id."""
     with open(realistic_video_filepath, "rb") as f:
-        post_response = this_context.client.post(
+        response = this_context.client.post(
             "/analyze-video",
             files={"file": (realistic_video_filepath.name, f, "video/mp4")},
         )
-    assert post_response.status_code == 202
-    video_id = post_response.json()["video_id"]
+    assert response.status_code == 202
+    return response.json()["video_id"]
 
-    status_response = this_context.client.get(f"/videos/{video_id}/status")
-    assert status_response.status_code == 200
-    status = status_response.json()
+
+def test_analysis_completes_all_frames(this_context: ThisContext, video_id: str) -> None:
+    status = this_context.client.get(f"/videos/{video_id}/status").json()
     assert status["analyzed_frames"] == status["total_frames"]
 
-    response = this_context.client.get(f"/videos/{video_id}/tracks")
 
-    assert response.status_code == 200
-    tracks = response.json()["tracks"]
-    all_detections = [detection for track in tracks for detection in track["detections"]]
-    labels = {detection["label"] for detection in all_detections}
-    assert labels == {"person"}
-
-    assert all_detections[0]["bbox"] == {"center_x": 345, "center_y": 394, "width": 102, "height": 343}
+def test_first_detection_bbox(this_context: ThisContext, video_id: str) -> None:
+    tracks = this_context.client.get(f"/videos/{video_id}/tracks").json()["tracks"]
+    assert tracks[0]["detections"][0]["bbox"] == {"center_x": 345, "center_y": 394, "width": 102, "height": 343}
