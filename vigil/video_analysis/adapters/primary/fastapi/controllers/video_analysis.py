@@ -4,17 +4,13 @@ from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from pydantic import BaseModel, Field
 
 from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import (
-    _get_track_repository,
-    _get_tracker,
     get_detect_objects_use_case,
     get_save_video_use_case,
+    get_track_objects_use_case,
 )
-from vigil.video_analysis.business_logic.gateways.track_repository import TrackRepository
-from vigil.video_analysis.business_logic.gateways.tracker import Tracker
-from vigil.video_analysis.business_logic.models.track import Track
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
-from vigil.video_analysis.business_logic.services.id_factory import IdFactory
 from vigil.video_analysis.business_logic.use_cases.detect_objects import DetectObjectsUseCase
+from vigil.video_analysis.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 router = APIRouter(tags=["videos"])
 
@@ -27,27 +23,20 @@ class AnalyseVideoResponse(BaseModel):
         examples=["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
     )
 
+
 class _AnalysisPipeline:
     def __init__(
         self,
         detect_objects_use_case: DetectObjectsUseCase,
-        tracker: Tracker,
-        track_repository: TrackRepository
+        track_objects_use_case: TrackObjectsUseCase,
     ):
         self._detect_objects_use_case = detect_objects_use_case
-        self._tracker = tracker
-        self._track_repository = track_repository
+        self._track_objects_use_case = track_objects_use_case
 
     def run(self, video_id) -> None:
         detections = self._detect_objects_use_case.execute(video_id)
-        for sequence in self._tracker.track(detections):
-            self._track_repository.save(
-                Track(
-                    id=IdFactory.new_track_id(sequence[0]),
-                    video_id=video_id,
-                    detections=tuple(sequence),
-                )
-            )
+        self._track_objects_use_case.execute(video_id=video_id, detections=detections)
+
 
 @router.post(
     "/analyze-video",
@@ -70,8 +59,7 @@ async def analyze_video(
     background_tasks: BackgroundTasks,
     save_video_use_case=Depends(get_save_video_use_case),
     detect_objects_use_case=Depends(get_detect_objects_use_case),
-    tracker=Depends(_get_tracker),
-    track_repository=Depends(_get_track_repository),
+    track_objects_use_case=Depends(get_track_objects_use_case),
 ) -> AnalyseVideoResponse:
     """Accept a video file, persist it, and start the analysis pipeline.
 
@@ -84,8 +72,7 @@ async def analyze_video(
 
     pipeline = _AnalysisPipeline(
         detect_objects_use_case=detect_objects_use_case,
-        tracker=tracker,
-        track_repository=track_repository,
+        track_objects_use_case=track_objects_use_case,
     )
     background_tasks.add_task(pipeline.run, video_id)
     return AnalyseVideoResponse(video_id=video_id)

@@ -12,6 +12,7 @@ from vigil.video_analysis.business_logic.use_cases.detect_objects import DetectO
 from vigil.video_analysis.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.video_analysis.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
 from vigil.video_analysis.business_logic.use_cases.save_video import SaveVideoUseCase
+from vigil.video_analysis.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 
 def _get_domain_event_publisher(request: Request) -> DomainEventPublisher:
@@ -78,3 +79,11 @@ def get_detect_objects_use_case(
         detection_model=detection_model,
         batch_size=8,
     )
+
+
+def get_track_objects_use_case(
+    tracker=Depends(_get_tracker),
+    track_repository=Depends(_get_track_repository),
+) -> TrackObjectsUseCase:
+    """Get the `TrackObjectsUseCase`."""
+    return TrackObjectsUseCase(tracker=tracker, track_repository=track_repository)
