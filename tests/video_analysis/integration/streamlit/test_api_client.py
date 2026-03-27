@@ -3,8 +3,8 @@ import uuid
 import pytest
 from starlette.testclient import TestClient
 
-from vigil.video_analysis.adapters.primary.streamlit.components.api_client import VigilClient
-from vigil.video_analysis.adapters.primary.streamlit.components.exceptions import VigilNotFoundError
+from vigil.app.streamlit.components.api_client import VigilClient
+from vigil.app.streamlit.components.exceptions import VigilNotFoundError
 
 
 def test_upload_video_returns_a_video_id(vigil_client: TestClient, video_bytes: bytes) -> None:

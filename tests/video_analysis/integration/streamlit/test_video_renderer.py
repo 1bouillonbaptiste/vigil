@@ -4,9 +4,9 @@ from pathlib import Path
 import cv2
 from starlette.testclient import TestClient
 
-from vigil.video_analysis.adapters.primary.streamlit.components.api_client import VigilClient
-from vigil.video_analysis.adapters.primary.streamlit.components.models import BoundingBox, DetectionData, TrackData
-from vigil.video_analysis.adapters.primary.streamlit.components.video_renderer import render_video_with_tracks
+from vigil.app.streamlit.components.api_client import VigilClient
+from vigil.app.streamlit.components.models import BoundingBox, DetectionData, TrackData
+from vigil.app.streamlit.components.video_renderer import render_video_with_tracks
 
 
 def make_detection(**overrides) -> DetectionData:

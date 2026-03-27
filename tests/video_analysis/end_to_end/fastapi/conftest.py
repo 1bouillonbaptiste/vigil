@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from starlette.testclient import TestClient
 
-from vigil.video_analysis.adapters.primary.fastapi.main import app
+from vigil.app.fastapi.main import app
 
 
 @pytest.fixture(scope="function")

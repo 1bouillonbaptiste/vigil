@@ -1,6 +1,6 @@
 from typing import Any
 
-from vigil.video_analysis.adapters.primary.streamlit.components.models import (
+from vigil.app.streamlit.components.models import (
     BoundingBox,
     DetectionData,
     TrackData,

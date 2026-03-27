@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from starlette.testclient import TestClient
 
+from vigil.app.fastapi.main import app
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import FrameDetectedSubscriber
 from vigil.monitoring.adapters.primary.events_subscriber.video_created_subscriber import VideoCreatedSubscriber
 from vigil.monitoring.adapters.secondary.in_memory_analysis_job_repository import InMemoryAnalysisJobRepository
@@ -18,7 +19,6 @@ from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import (
     _get_tracker,
     _get_video_repository,
 )
-from vigil.video_analysis.adapters.primary.fastapi.main import app
 from vigil.video_analysis.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.video_analysis.adapters.secondary.fake_tracker import FakeTracker
 from vigil.video_analysis.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository

@@ -6,7 +6,7 @@ import cv2
 import imageio
 import numpy as np
 
-from vigil.video_analysis.adapters.primary.streamlit.components.models import DetectionData, TrackData
+from vigil.app.streamlit.components.models import DetectionData, TrackData
 
 _LABEL_COLORS: dict[str, tuple[int, int, int]] = {
     "person": (50, 205, 50),  # lime green

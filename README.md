@@ -20,11 +20,11 @@ Once the environment is installed, you can run both the backend and frontend:
 Backend (FastAPI):
 
 ```bash
-poetry run uvicorn vigil.video_analysis.adapters.primary.fastapi.main:app --reload --port 8000
+poetry run uvicorn vigil.app.fastapi.main:app --reload --port 8000
 ```
 
 Frontend (Streamlit):
 
 ```bash
-poetry run streamlit run vigil/video_analysis/adapters/primary/streamlit/main.py
+poetry run streamlit run vigil/app/streamlit/main.py
 ```

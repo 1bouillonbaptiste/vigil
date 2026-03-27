@@ -5,13 +5,13 @@ from typing import Final
 
 from fastapi import FastAPI
 
+from vigil.app.fastapi.config import AppConfig
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import (
     FrameDetectedSubscriber as MonitoringFrameDetectedSubscriber,
 )
 from vigil.monitoring.adapters.primary.events_subscriber.video_created_subscriber import VideoCreatedSubscriber
 from vigil.monitoring.adapters.secondary.in_memory_analysis_job_repository import InMemoryAnalysisJobRepository
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
-from vigil.video_analysis.adapters.primary.fastapi.config import AppConfig
 from vigil.video_analysis.adapters.primary.fastapi.controllers import (
     video_analysis,
     video_status,

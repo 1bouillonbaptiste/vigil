@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
+from vigil.app.fastapi.main import app
 from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import _get_detection_model
-from vigil.video_analysis.adapters.primary.fastapi.main import app
 from vigil.video_analysis.adapters.secondary.yolo_detection_model import make_yolo_detection_model
 
 
