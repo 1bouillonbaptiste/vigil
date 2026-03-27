@@ -2,17 +2,17 @@ from typing import Any
 
 import httpx
 
-from vigil.video_analysis.adapters.primary.streamlit.components.config import API_BASE_URL, REQUEST_TIMEOUT
-from vigil.video_analysis.adapters.primary.streamlit.components.exceptions import (
+from vigil.app.streamlit.components.config import API_BASE_URL, REQUEST_TIMEOUT
+from vigil.app.streamlit.components.exceptions import (
     VigilAPIError,
     VigilConnectionError,
     VigilNotFoundError,
 )
-from vigil.video_analysis.adapters.primary.streamlit.components.mappers import (
+from vigil.app.streamlit.components.mappers import (
     tracks_from_payload,
     video_status_from_payload,
 )
-from vigil.video_analysis.adapters.primary.streamlit.components.models import TrackData, VideoStatus
+from vigil.app.streamlit.components.models import TrackData, VideoStatus
 
 
 class VigilClient:

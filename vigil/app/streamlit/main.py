@@ -6,10 +6,10 @@ from pathlib import Path
 import cv2
 import streamlit as st
 
-from vigil.video_analysis.adapters.primary.streamlit.components.api_client import VigilClient
-from vigil.video_analysis.adapters.primary.streamlit.components.exceptions import VigilAPIError
-from vigil.video_analysis.adapters.primary.streamlit.components.models import VideoEntry, VideoStatus
-from vigil.video_analysis.adapters.primary.streamlit.components.video_renderer import render_video_with_tracks
+from vigil.app.streamlit.components.api_client import VigilClient
+from vigil.app.streamlit.components.exceptions import VigilAPIError
+from vigil.app.streamlit.components.models import VideoEntry, VideoStatus
+from vigil.app.streamlit.components.video_renderer import render_video_with_tracks
 
 st.set_page_config(
     page_title="Vigil",
