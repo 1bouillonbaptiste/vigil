@@ -27,20 +27,27 @@ class AnalyseVideoResponse(BaseModel):
         examples=["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
     )
 
+class _AnalysisPipeline:
+    def __init__(
+        self,
+        detect_objects_use_case: DetectObjectsUseCase,
+        tracker: Tracker,
+        track_repository: TrackRepository
+    ):
+        self._detect_objects_use_case = detect_objects_use_case
+        self._tracker = tracker
+        self._track_repository = track_repository
 
-def _run_analysis(
-    video_id: UUID, detect_objects: DetectObjectsUseCase, tracker: Tracker, track_repository: TrackRepository
-) -> None:
-    detections = detect_objects.execute(video_id)
-    for sequence in tracker.track(detections):
-        track_repository.save(
-            Track(
-                id=IdFactory.new_track_id(sequence[0]),
-                video_id=video_id,
-                detections=tuple(sequence),
+    def run(self, video_id) -> None:
+        detections = self._detect_objects_use_case.execute(video_id)
+        for sequence in self._tracker.track(detections):
+            self._track_repository.save(
+                Track(
+                    id=IdFactory.new_track_id(sequence[0]),
+                    video_id=video_id,
+                    detections=tuple(sequence),
+                )
             )
-        )
-
 
 @router.post(
     "/analyze-video",
@@ -74,5 +81,11 @@ async def analyze_video(
     source = VideoSource(uri=file.filename or "video")
     data = await file.read()
     video_id = save_video_use_case.execute(source=source, data=data)
-    background_tasks.add_task(_run_analysis, video_id, detect_objects_use_case, tracker, track_repository)
+
+    pipeline = _AnalysisPipeline(
+        detect_objects_use_case=detect_objects_use_case,
+        tracker=tracker,
+        track_repository=track_repository,
+    )
+    background_tasks.add_task(pipeline.run, video_id)
     return AnalyseVideoResponse(video_id=video_id)
