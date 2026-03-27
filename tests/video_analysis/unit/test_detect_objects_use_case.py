@@ -11,7 +11,6 @@ from vigil.video_analysis.business_logic.gateways.detection_model import Detecti
 from vigil.video_analysis.business_logic.models.detection import BoundingBox, ClassLabel, Prediction
 from vigil.video_analysis.business_logic.models.frame_detected import FrameDetected
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
-from vigil.video_analysis.business_logic.services.detection_service import DetectionService
 from vigil.video_analysis.business_logic.services.id_factory import IdFactory
 from vigil.video_analysis.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 
@@ -73,7 +72,6 @@ class ThisContext:
 def this_context() -> ThisContext:
     video_repository = StubVideoRepository()
     domain_event_publisher = InMemoryEventPublisher()
-    detection_service = DetectionService(model=FakeDetectionModel())
 
     frame_detected_events = SpyFrameDetected()
     domain_event_publisher.subscribe(handler=frame_detected_events)
@@ -81,7 +79,7 @@ def this_context() -> ThisContext:
     use_case = DetectObjectsUseCase(
         domain_event_publisher=domain_event_publisher,
         video_repository=video_repository,
-        detection_service=detection_service,
+        detection_model=FakeDetectionModel(),
         batch_size=2,
     )
     return ThisContext(
@@ -152,3 +150,15 @@ def test_should_collect_detections_across_batches(this_context: ThisContext) -> 
     result = this_context.use_case.execute(VIDEO_ID)
 
     assert len(result) == 3
+
+
+def test_should_assign_correct_frame_metadata_to_detections(this_context: ThisContext) -> None:
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
+    this_context.video_repository.add(np.array([1], dtype=np.uint8))
+
+    result = this_context.use_case.execute(VIDEO_ID)
+
+    assert result[0].frame_id == IdFactory.new_frame_id(video_id=VIDEO_ID, position=0)
+    assert result[0].frame_position == 0
+    assert result[1].frame_id == IdFactory.new_frame_id(video_id=VIDEO_ID, position=1)
+    assert result[1].frame_position == 1
