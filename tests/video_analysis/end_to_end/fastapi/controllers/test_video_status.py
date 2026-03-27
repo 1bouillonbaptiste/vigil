@@ -13,7 +13,7 @@ from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import (
     _get_track_repository,
     _get_tracker,
     _get_video_repository,
-    get_video_analysis_workflow,
+    get_detect_objects_use_case,
 )
 from vigil.video_analysis.adapters.secondary.fake_detection_model import FakeDetectionModel
 from vigil.video_analysis.adapters.secondary.fake_tracker import FakeTracker
@@ -22,15 +22,15 @@ from vigil.video_analysis.adapters.secondary.in_memory_analysis_progression_proj
 )
 from vigil.video_analysis.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.video_analysis.adapters.secondary.local_video_repository import LocalVideoRepository
+from vigil.video_analysis.business_logic.models.detection import Detection
 
 
-class _NoOpWorkflow:
-    """Dummy workflow that does nothing."""
+class _NoOpDetectObjects:
+    """Stub detection use case that publishes no events and returns no
+    detections."""
 
-    def execute(self, video_id: UUID) -> None:
-        """Not saving analyzed frames make the analysis think the video is
-        pending."""
-        pass
+    def execute(self, video_id: UUID) -> list[Detection]:
+        return []
 
 
 def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_path: Path, fake_video_filepath: Path):
@@ -67,7 +67,9 @@ def test_returns_zero_analyzed_frames_before_analysis_starts(
     analysis_progression = InMemoryAnalysisProgressionProjection()
 
     fastapi_client.app.dependency_overrides[_get_video_repository] = lambda: video_repository  # type: ignore
-    fastapi_client.app.dependency_overrides[get_video_analysis_workflow] = lambda: _NoOpWorkflow()  # type: ignore
+    fastapi_client.app.dependency_overrides[_get_track_repository] = lambda: InMemoryTrackRepository()  # type: ignore
+    fastapi_client.app.dependency_overrides[_get_tracker] = lambda: FakeTracker()  # type: ignore
+    fastapi_client.app.dependency_overrides[get_detect_objects_use_case] = lambda: _NoOpDetectObjects()  # type: ignore
     fastapi_client.app.dependency_overrides[_get_analysis_progression] = lambda: analysis_progression  # type: ignore
 
     with open(fake_video_filepath, "rb") as file:

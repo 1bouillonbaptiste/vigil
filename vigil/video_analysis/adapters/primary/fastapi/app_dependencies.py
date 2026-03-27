@@ -9,10 +9,10 @@ from vigil.video_analysis.business_logic.gateways.track_repository import TrackR
 from vigil.video_analysis.business_logic.gateways.tracker import Tracker
 from vigil.video_analysis.business_logic.gateways.video_repository import VideoRepository
 from vigil.video_analysis.business_logic.services.detection_service import DetectionService
+from vigil.video_analysis.business_logic.use_cases.detect_objects import DetectObjectsUseCase
 from vigil.video_analysis.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.video_analysis.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
 from vigil.video_analysis.business_logic.use_cases.save_video import SaveVideoUseCase
-from vigil.video_analysis.business_logic.use_cases.video_analysis_workflow import VideoAnalysisWorkflow
 
 
 def _get_domain_event_publisher(request: Request) -> DomainEventPublisher:
@@ -71,23 +71,15 @@ def get_video_tracks_use_case(
     return GetVideoTracksUseCase(track_repository=track_repository)
 
 
-def get_video_analysis_workflow(
+def get_detect_objects_use_case(
     domain_event_publisher=Depends(_get_domain_event_publisher),
     video_repository=Depends(_get_video_repository),
     detection_service=Depends(_build_detection_service),
-    track_repository=Depends(_get_track_repository),
-    tracker=Depends(_get_tracker),
-) -> VideoAnalysisWorkflow:
-    """Get the `VideoAnalysisWorkflow`.
-
-    A fresh tracker is injected per request so that each video analysis gets
-    isolated per-video state.
-    """
-    return VideoAnalysisWorkflow(
+) -> DetectObjectsUseCase:
+    """Get the `DetectObjectsUseCase`."""
+    return DetectObjectsUseCase(
         domain_event_publisher=domain_event_publisher,
         video_repository=video_repository,
         detection_service=detection_service,
-        tracker=tracker,
-        track_repository=track_repository,
         batch_size=8,
     )
