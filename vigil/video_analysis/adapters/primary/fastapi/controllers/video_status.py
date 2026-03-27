@@ -3,8 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from vigil.monitoring.business_logic.exceptions import VideoNotFoundError
 from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import get_analysis_status_use_case
-from vigil.video_analysis.business_logic.exceptions import VideoNotFoundError
 
 router = APIRouter(tags=["videos"])
 
