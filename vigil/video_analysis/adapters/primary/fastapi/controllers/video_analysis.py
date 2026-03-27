@@ -4,10 +4,13 @@ from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from pydantic import BaseModel, Field
 
 from vigil.video_analysis.adapters.primary.fastapi.app_dependencies import (
+    get_detect_objects_use_case,
     get_save_video_use_case,
-    get_video_analysis_workflow,
+    get_track_objects_use_case,
 )
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
+from vigil.video_analysis.business_logic.use_cases.detect_objects import DetectObjectsUseCase
+from vigil.video_analysis.business_logic.use_cases.track_objects import TrackObjectsUseCase
 
 router = APIRouter(tags=["videos"])
 
@@ -19,6 +22,20 @@ class AnalyseVideoResponse(BaseModel):
         description=("Unique identifier for the submitted video. Use this ID to poll for analysis results."),
         examples=["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
     )
+
+
+class _AnalysisPipeline:
+    def __init__(
+        self,
+        detect_objects_use_case: DetectObjectsUseCase,
+        track_objects_use_case: TrackObjectsUseCase,
+    ):
+        self._detect_objects_use_case = detect_objects_use_case
+        self._track_objects_use_case = track_objects_use_case
+
+    def run(self, video_id) -> None:
+        detections = self._detect_objects_use_case.execute(video_id)
+        self._track_objects_use_case.execute(video_id=video_id, detections=detections)
 
 
 @router.post(
@@ -41,7 +58,8 @@ async def analyze_video(
     file: UploadFile,
     background_tasks: BackgroundTasks,
     save_video_use_case=Depends(get_save_video_use_case),
-    video_analysis_workflow=Depends(get_video_analysis_workflow),
+    detect_objects_use_case=Depends(get_detect_objects_use_case),
+    track_objects_use_case=Depends(get_track_objects_use_case),
 ) -> AnalyseVideoResponse:
     """Accept a video file, persist it, and start the analysis pipeline.
 
@@ -51,5 +69,10 @@ async def analyze_video(
     source = VideoSource(uri=file.filename or "video")
     data = await file.read()
     video_id = save_video_use_case.execute(source=source, data=data)
-    background_tasks.add_task(video_analysis_workflow.execute, video_id)
+
+    pipeline = _AnalysisPipeline(
+        detect_objects_use_case=detect_objects_use_case,
+        track_objects_use_case=track_objects_use_case,
+    )
+    background_tasks.add_task(pipeline.run, video_id)
     return AnalyseVideoResponse(video_id=video_id)
