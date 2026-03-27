@@ -1,15 +1,15 @@
 from fastapi import Depends
 from starlette.requests import Request
 
+from vigil.monitoring.business_logic.gateways.analysis_job_repository import AnalysisJobRepository
+from vigil.monitoring.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.shared_kernel.gateways.domain_event_publisher import DomainEventPublisher
 from vigil.video_analysis.adapters.secondary.bytetrack_tracker import make_bytetrack_tracker
-from vigil.video_analysis.business_logic.gateways.analysis_progression_projection import AnalysisProgressionProjection
 from vigil.video_analysis.business_logic.gateways.detection_model import DetectionModel
 from vigil.video_analysis.business_logic.gateways.track_repository import TrackRepository
 from vigil.video_analysis.business_logic.gateways.tracker import Tracker
 from vigil.video_analysis.business_logic.gateways.video_repository import VideoRepository
 from vigil.video_analysis.business_logic.use_cases.detect_objects import DetectObjectsUseCase
-from vigil.video_analysis.business_logic.use_cases.get_analysis_status import GetAnalysisStatusUseCase
 from vigil.video_analysis.business_logic.use_cases.get_video_tracks import GetVideoTracksUseCase
 from vigil.video_analysis.business_logic.use_cases.save_video import SaveVideoUseCase
 from vigil.video_analysis.business_logic.use_cases.track_objects import TrackObjectsUseCase
@@ -41,23 +41,23 @@ def _get_tracker() -> Tracker:
     return make_bytetrack_tracker()
 
 
-def _get_analysis_progression(request: Request) -> AnalysisProgressionProjection:
-    return request.app.state.analysis_progression
+def _get_analysis_job_repository(request: Request) -> AnalysisJobRepository:
+    return request.app.state.analysis_job_repository
 
 
 def get_analysis_status_use_case(
-    video_repository=Depends(_get_video_repository),
-    analysis_progression=Depends(_get_analysis_progression),
+    analysis_job_repository=Depends(_get_analysis_job_repository),
 ) -> GetAnalysisStatusUseCase:
     """Get the `GetAnalysisStatusUseCase`."""
-    return GetAnalysisStatusUseCase(video_repository=video_repository, analysis_progression=analysis_progression)
+    return GetAnalysisStatusUseCase(analysis_job_repository=analysis_job_repository)
 
 
 def get_save_video_use_case(
     video_repository=Depends(_get_video_repository),
+    domain_event_publisher=Depends(_get_domain_event_publisher),
 ) -> SaveVideoUseCase:
     """Get the `SaveVideoUseCase`."""
-    return SaveVideoUseCase(video_repository=video_repository)
+    return SaveVideoUseCase(video_repository=video_repository, domain_event_publisher=domain_event_publisher)
 
 
 def get_video_tracks_use_case(

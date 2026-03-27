@@ -35,6 +35,11 @@ def test_should_detect_people_across_video_frames(this_context: ThisContext, rea
     assert post_response.status_code == 202
     video_id = post_response.json()["video_id"]
 
+    status_response = this_context.client.get(f"/videos/{video_id}/status")
+    assert status_response.status_code == 200
+    status = status_response.json()
+    assert status["analyzed_frames"] == status["total_frames"]
+
     response = this_context.client.get(f"/videos/{video_id}/tracks")
 
     assert response.status_code == 200
