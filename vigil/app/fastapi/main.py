@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from vigil.app.fastapi.config import AppConfig
 from vigil.embedding.adapters.primary.fastapi.controllers import query_by_description
+from vigil.embedding.adapters.secondary.clip_embedding_model import ClipEmbeddingModel
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import (
     FrameDetectedSubscriber as MonitoringFrameDetectedSubscriber,
@@ -47,6 +48,7 @@ async def lifespan(app: FastAPI):
     app.state.track_repository = track_repository
     app.state.analysis_job_repository = analysis_job_repository
     app.state.embedded_track_repository = InMemoryEmbeddedTrackRepository()
+    app.state.embedding_model = ClipEmbeddingModel()
 
     yield
 
