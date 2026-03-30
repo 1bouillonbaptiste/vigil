@@ -1,6 +1,4 @@
-import numpy as np
-import numpy.typing as npt
-
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.gateways.detection_model import DetectionModel
 from vigil.video_analysis.business_logic.models.detection import BoundingBox, ClassLabel, Prediction
 
@@ -8,7 +6,7 @@ from vigil.video_analysis.business_logic.models.detection import BoundingBox, Cl
 class FakeDetectionModel(DetectionModel):
     """Detection model for testing purpose."""
 
-    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[Prediction]]:
+    def detect(self, frames: list[Image]) -> list[list[Prediction]]:
         """Detect a person per frame."""
         return [
             [

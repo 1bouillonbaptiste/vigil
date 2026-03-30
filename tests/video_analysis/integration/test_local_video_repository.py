@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import pytest
 
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.adapters.secondary.local_video_repository import LocalVideoRepository
 from vigil.video_analysis.business_logic.exceptions import VideoNotFoundError
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
@@ -78,4 +79,4 @@ def test_should_yield_numpy_arrays(
 
     frames = list(repository.read(video_id))
 
-    assert all(isinstance(f, np.ndarray) for f in frames)
+    assert all(isinstance(f, Image) for f in frames)

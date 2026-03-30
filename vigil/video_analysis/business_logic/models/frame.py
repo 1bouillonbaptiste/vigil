@@ -2,8 +2,7 @@ from dataclasses import dataclass, field
 from typing import NewType
 from uuid import UUID
 
-import numpy as np
-import numpy.typing as npt
+from vigil.shared_kernel.models.image import Image
 
 FrameId = NewType("FrameId", UUID)
 """Frame unique identifier."""
@@ -22,5 +21,5 @@ class Frame:
     video_id: UUID
     """Video identifier the frame originally comes from."""
 
-    data: npt.NDArray[np.uint8] = field(hash=False, compare=False)
+    data: Image = field(hash=False, compare=False)
     """Frame image data."""
