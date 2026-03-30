@@ -17,7 +17,7 @@ class ThisContext:
     client: TestClient
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def this_context() -> Generator[ThisContext, None, None]:
     detection_model = make_yolo_detection_model(model_name="yolov8n")
     app.dependency_overrides[_get_detection_model] = lambda: detection_model
@@ -26,13 +26,7 @@ def this_context() -> Generator[ThisContext, None, None]:
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(scope="module")
-def realistic_video_filepath() -> Path:
-    """Return the path to the realistic 10-frame people video fixture."""
-    return Path(__file__).parent.parent.parent / "data" / "people_10frames.mp4"
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def video_id(this_context: ThisContext, realistic_video_filepath: Path) -> str:
     """Upload a video, run analysis, and return the video_id."""
     with open(realistic_video_filepath, "rb") as f:
