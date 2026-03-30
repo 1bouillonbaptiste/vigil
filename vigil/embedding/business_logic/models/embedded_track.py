@@ -19,7 +19,10 @@ class Embedding:
         """Cosine similarity between two embeddings."""
         first = self.numpy()
         second = embedding.numpy()
-        return np.dot(first, second) / (np.linalg.norm(first) * np.linalg.norm(second))
+        norm = np.linalg.norm(first) * np.linalg.norm(second)
+        if norm == 0:
+            return 0
+        return np.dot(first, second) / norm
 
 
 @dataclass(frozen=True)
@@ -34,5 +37,7 @@ class EmbeddedTrack:
 
     def similarity(self, embedding: Embedding) -> float:
         """How close a track is to an embedding."""
+        if not self.detections:
+            return 0
         similarities: list[float] = [embedding.cosine(detection) for detection in self.detections]
         return sum(similarities) / len(similarities)
