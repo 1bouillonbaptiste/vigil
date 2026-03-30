@@ -4,7 +4,7 @@ from uuid import UUID
 import pytest
 
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
-from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingModel
+from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingModel, ImageData
 from vigil.embedding.business_logic.models.embedded_track import EmbeddedTrack, Embedding
 from vigil.embedding.business_logic.use_cases.find_similar_tracks import FindSimilarTracksUseCase
 
@@ -22,7 +22,7 @@ class FakeEmbeddingModel(EmbeddingModel):
         """Fake the model output."""
         return self._embedding
 
-    def embed_image(self, data: object) -> Embedding:
+    def embed_image(self, data: ImageData) -> Embedding:
         """Unused stub."""
         raise NotImplementedError
 

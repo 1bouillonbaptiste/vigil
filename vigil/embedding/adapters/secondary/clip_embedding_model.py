@@ -9,7 +9,7 @@ from transformers import CLIPModel, CLIPProcessor, CLIPTokenizer
 
 from vigil.embedding.business_logic.models.embedded_track import Embedding
 
-_MODELS_DIR: Final[Path] = Path(__file__).parent / "models"
+_MODELS_DIR: Final[Path] = Path("~/.cache/vigil/models").expanduser()
 _CLIP_MODEL_NAME: Final[str] = "openai/clip-vit-base-patch32"
 
 
@@ -23,7 +23,7 @@ class ClipEmbeddingModel:
     """
 
     def __init__(self) -> None:
-        _MODELS_DIR.mkdir(exist_ok=True)
+        _MODELS_DIR.mkdir(parents=True, exist_ok=True)
         self._tokenizer: CLIPTokenizer = CLIPTokenizer.from_pretrained(  # type: ignore[assignment]
             _CLIP_MODEL_NAME, cache_dir=_MODELS_DIR
         )
