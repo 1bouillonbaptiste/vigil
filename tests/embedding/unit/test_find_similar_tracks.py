@@ -53,6 +53,21 @@ def test_should_query_tracks_with_high_similarity(this_context: ThisContext):
     assert result == [EmbeddedTrack(id=TRACK_ID, detections=(Embedding((0.5, 0.5)),))]
 
 
+def test_should_return_all_tracks_when_description_is_empty(this_context: ThisContext):
+    # Given
+    this_context.repository.save(EmbeddedTrack(id=TRACK_ID, detections=(Embedding((0.5, 0.5)),)))
+    this_context.repository.save(EmbeddedTrack(id=TRACK_ID_2, detections=(Embedding((0.1, 0.9)),)))
+
+    # When
+    result = this_context.use_case.execute(description="")
+
+    # Then
+    assert result == [
+        EmbeddedTrack(id=TRACK_ID, detections=(Embedding((0.5, 0.5)),)),
+        EmbeddedTrack(id=TRACK_ID_2, detections=(Embedding((0.1, 0.9)),)),
+    ]
+
+
 def test_should_query_tracks_with_any_similarity(this_context: ThisContext):
     # Given
     this_context.repository.save(EmbeddedTrack(id=TRACK_ID, detections=(Embedding((0.5, 0.5)),)))

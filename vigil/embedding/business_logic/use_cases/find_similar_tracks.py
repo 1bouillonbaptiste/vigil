@@ -12,6 +12,9 @@ class FindSimilarTracksUseCase:
 
     def execute(self, description: str, min_similarity: float = 0.9) -> list[EmbeddedTrack]:
         """Execute the use case given an embedding."""
+        if not description:
+            return self._repository.list_tracks()
+
         embedding = self._model.embed(description)
 
         result: list[EmbeddedTrack] = []
