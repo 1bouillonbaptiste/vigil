@@ -5,8 +5,8 @@ from uuid import UUID
 
 import cv2
 import numpy as np
-import numpy.typing as npt
 
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.exceptions import VideoNotFoundError
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
 from vigil.video_analysis.business_logic.services.id_factory import IdFactory
@@ -38,7 +38,7 @@ class LocalVideoRepository:
         cap.release()
         return count
 
-    def read(self, video_id: UUID) -> Iterator[npt.NDArray[np.uint8]]:
+    def read(self, video_id: UUID) -> Iterator[Image]:
         """Yield frames from the stored video in position order."""
         if video_id not in self._paths:
             raise VideoNotFoundError(video_id)
@@ -48,7 +48,7 @@ class LocalVideoRepository:
                 ret, frame = cap.read()
                 if not ret:
                     break
-                yield frame.astype(np.uint8)
+                yield Image(frame.astype(np.uint8))
         finally:
             cap.release()
 

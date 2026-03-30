@@ -2,10 +2,9 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any, Final, Protocol
 
-import numpy as np
-import numpy.typing as npt
 from ultralytics import YOLO
 
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.models.detection import BoundingBox, ClassLabel, Prediction
 
 _MODELS_DIR: Final[Path] = Path(__file__).parent / "models"
@@ -46,12 +45,13 @@ class YoloDetectionModel:
         self._yolo = yolo_model
         self._confidence_threshold = confidence_threshold
 
-    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[Prediction]]:
+    def detect(self, frames: list[Image]) -> list[list[Prediction]]:
         """Run inference on a batch of frames and return domain predictions."""
-        results = self._yolo(frames, verbose=False)
+        arrays = [f.numpy() for f in frames]
+        results = self._yolo(arrays, verbose=False)
         return [
-            _extract_predictions(result, frame.shape[0], self._confidence_threshold)
-            for result, frame in zip(results, frames, strict=True)
+            _extract_predictions(result, array.shape[0], self._confidence_threshold)
+            for result, array in zip(results, arrays, strict=True)
         ]
 
 

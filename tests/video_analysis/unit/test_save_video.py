@@ -2,11 +2,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from uuid import UUID
 
-import numpy as np
-import numpy.typing as npt
 import pytest
 
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.gateways.video_repository import VideoRepository
 from vigil.video_analysis.business_logic.models.video_created import VideoCreated
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
@@ -25,7 +24,7 @@ class SpyVideoRepository(VideoRepository):
     def save(self, source: VideoSource, data: bytes) -> None:
         self.saved.append((source, data))
 
-    def read(self, video_id: UUID) -> Iterable[npt.NDArray[np.uint8]]:
+    def read(self, video_id: UUID) -> Iterable[Image]:
         return []
 
     def frame_count(self, video_id: UUID) -> int:

@@ -1,7 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
-from vigil.embedding.business_logic.models.image import Image
+from vigil.shared_kernel.models.image import Image
 
 
 class CropProvider(Protocol):

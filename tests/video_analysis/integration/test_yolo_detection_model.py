@@ -6,6 +6,7 @@ import numpy.typing as npt
 import pytest
 from pytest_cases import parametrize_with_cases
 
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.adapters.secondary.yolo_detection_model import YoloDetectionModel, make_yolo_detection_model
 from vigil.video_analysis.business_logic.models.detection import BoundingBox, ClassLabel
 
@@ -61,8 +62,8 @@ class FakeYoloModel:
 # ---------------------------------------------------------------------------
 
 
-def make_frame(height: int = 100, width: int = 100) -> npt.NDArray[np.uint8]:
-    return np.zeros((height, width, 3), dtype=np.uint8)
+def make_frame(height: int = 100, width: int = 100) -> Image:
+    return Image(np.zeros((height, width, 3), dtype=np.uint8))
 
 
 def make_fake_box(

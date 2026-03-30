@@ -1,6 +1,6 @@
 from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingModel
 from vigil.embedding.business_logic.models.embedded_track import Embedding
-from vigil.embedding.business_logic.models.image import Image
+from vigil.shared_kernel.models.image import Image
 
 
 class FakeEmbeddingModel(EmbeddingModel):

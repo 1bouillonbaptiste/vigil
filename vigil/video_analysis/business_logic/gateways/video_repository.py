@@ -2,9 +2,7 @@ from collections.abc import Iterable
 from typing import Protocol
 from uuid import UUID
 
-import numpy as np
-import numpy.typing as npt
-
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
 
 
@@ -15,7 +13,7 @@ class VideoRepository(Protocol):
         """Persist raw video bytes under the given source."""
         ...
 
-    def read(self, video_id: UUID) -> Iterable[npt.NDArray[np.uint8]]:
+    def read(self, video_id: UUID) -> Iterable[Image]:
         """Read frames from a stored video."""
         ...
 

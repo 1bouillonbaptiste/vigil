@@ -6,8 +6,8 @@ from vigil.embedding.adapters.secondary.fake_embedding_model import FakeEmbeddin
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
 from vigil.embedding.business_logic.gateways.crop_provider import CropProvider
 from vigil.embedding.business_logic.models.embedded_track import EmbeddedTrack, Embedding
-from vigil.embedding.business_logic.models.image import Image
 from vigil.embedding.business_logic.use_cases.index_track import IndexTrackUseCase
+from vigil.shared_kernel.models.image import Image
 
 TRACK_ID = uuid4()
 DETECTION_ID = uuid4()

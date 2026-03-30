@@ -2,10 +2,10 @@ from collections.abc import Iterable
 from uuid import UUID
 
 import numpy as np
-import numpy.typing as npt
 import pytest
 
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
+from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.gateways.detection_model import DetectionModel
 from vigil.video_analysis.business_logic.models.detection import Prediction
 from vigil.video_analysis.business_logic.models.frame_detected import FrameDetected
@@ -18,15 +18,15 @@ VIDEO_ID = IdFactory.new_video_id(VideoSource(uri="test-video"))
 
 class StubVideoRepository:
     def __init__(self) -> None:
-        self._frames: list[npt.NDArray[np.uint8]] = []
+        self._frames: list[Image] = []
 
-    def add(self, data: npt.NDArray[np.uint8]) -> None:
+    def add(self, data: Image) -> None:
         self._frames.append(data)
 
     def save(self, source: object, data: bytes) -> None:
         pass
 
-    def read(self, video_id: UUID) -> Iterable[npt.NDArray[np.uint8]]:
+    def read(self, video_id: UUID) -> Iterable[Image]:
         return self._frames
 
     def frame_count(self, video_id: UUID) -> int:
@@ -37,7 +37,7 @@ class SpyDetectionModel(DetectionModel):
     def __init__(self) -> None:
         self.call_count = 0
 
-    def detect(self, frames: list[npt.NDArray[np.uint8]]) -> list[list[Prediction]]:
+    def detect(self, frames: list[Image]) -> list[list[Prediction]]:
         self.call_count += 1
         return [[] for _ in frames]
 
@@ -63,7 +63,7 @@ class SpyFrameDetected:
 def test_should_batch_detection(n_frames: int, batch_size: int, expected_model_calls: int) -> None:
     video_repository = StubVideoRepository()
     for _ in range(n_frames):
-        video_repository.add(np.array([1], dtype=np.uint8))
+        video_repository.add(Image(np.array([1], dtype=np.uint8)))
 
     spy_model = SpyDetectionModel()
     domain_event_publisher = InMemoryEventPublisher()
