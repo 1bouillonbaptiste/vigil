@@ -58,6 +58,7 @@ class DetectObjectsUseCase:
             for prediction in predictions:
                 all_detections.append(
                     Detection(
+                        id=IdFactory.new_detection_id(frame.id, prediction.bbox),
                         frame_id=frame.id,
                         frame_position=frame.position,
                         prediction=prediction,

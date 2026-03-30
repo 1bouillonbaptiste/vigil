@@ -46,3 +46,9 @@ def test_analysis_completes_all_frames(this_context: ThisContext, video_id: str)
 def test_first_detection_bbox(this_context: ThisContext, video_id: str) -> None:
     tracks = this_context.client.get(f"/videos/{video_id}/tracks").json()["tracks"]
     assert tracks[0]["detections"][0]["bbox"] == {"center_x": 345, "center_y": 394, "width": 102, "height": 343}
+
+
+def test_should_embed_a_track_after_analysis(this_context: ThisContext, video_id: str) -> None:
+    response = this_context.client.get("/tracks/by-description", params={"description": ""}).json()
+    assert response["status"] == "success"
+    assert len(response["content"]["tracks"]) > 0

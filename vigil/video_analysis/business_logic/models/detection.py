@@ -1,6 +1,15 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import NewType
 from uuid import UUID
+
+from vigil.shared_kernel.models.bounding_box import BoundingBox
+
+# Re-export so existing imports from this module continue to work.
+__all__ = ["BoundingBox", "ClassLabel", "Detection", "DetectionId", "Prediction"]
+
+DetectionId = NewType("DetectionId", UUID)
+"""Detection unique identifier."""
 
 
 class ClassLabel(StrEnum):
@@ -8,20 +17,6 @@ class ClassLabel(StrEnum):
 
     PERSON = "person"
     VEHICLE = "vehicle"
-
-
-@dataclass(frozen=True)
-class BoundingBox:
-    """Represent the geometric extent of a detected object in a frame."""
-
-    center_x: int
-    """X-axis coordinate of the bbox centroid, in pixels from bottom left."""
-    center_y: int
-    """Y-axis coordinate of the bbox centroid, in pixels from bottom left."""
-    width: int
-    """Width of the bounding box, in pixels."""
-    height: int
-    """Height of the bounding box, in pixels."""
 
 
 @dataclass(frozen=True)
@@ -40,6 +35,8 @@ class Prediction:
 class Detection:
     """Represent an instance detection in the domain: a prediction anchored to a frame."""
 
+    id: DetectionId
+    """Unique identifier for this detection."""
     frame_id: UUID
     """Identifier of the frame the detection was observed in."""
     frame_position: int

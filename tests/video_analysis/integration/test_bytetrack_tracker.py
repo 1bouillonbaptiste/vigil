@@ -19,7 +19,10 @@ def make_detection(
     frame_position: int,
     confidence: float = 0.9,
 ) -> Detection:
+    from vigil.video_analysis.business_logic.services.id_factory import IdFactory
+
     return Detection(
+        id=IdFactory.new_detection_id(frame_id, bbox),
         frame_id=frame_id,
         frame_position=frame_position,
         prediction=Prediction(bbox=bbox, confidence=confidence, label=ClassLabel.PERSON),

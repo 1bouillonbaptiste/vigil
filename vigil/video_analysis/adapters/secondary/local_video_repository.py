@@ -6,14 +6,17 @@ from uuid import UUID
 import cv2
 import numpy as np
 
+from vigil.embedding.business_logic.gateways.frame_reader import FrameReader
+from vigil.shared_kernel.models.bounding_box import BoundingBox
 from vigil.shared_kernel.models.image import Image
 from vigil.video_analysis.business_logic.exceptions import VideoNotFoundError
+from vigil.video_analysis.business_logic.gateways.video_repository import VideoRepository
 from vigil.video_analysis.business_logic.models.video_source import VideoSource
 from vigil.video_analysis.business_logic.services.id_factory import IdFactory
 
 
 @dataclass
-class LocalVideoRepository:
+class LocalVideoRepository(VideoRepository, FrameReader):
     """Store video files on the local filesystem and read frames via OpenCV."""
 
     storage_dir: Path
@@ -57,3 +60,24 @@ class LocalVideoRepository:
         if video_id not in self._paths:
             raise VideoNotFoundError(video_id)
         return self._frame_counts[video_id]
+
+    def read_crop(self, video_id: UUID, frame_position: int, bbox: BoundingBox) -> Image:
+        """Seek to `frame_position` and return the region clipped to `bbox`."""
+        if video_id not in self._paths:
+            raise VideoNotFoundError(video_id)
+        cap = cv2.VideoCapture(str(self._paths[video_id]))
+        try:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_position)
+            ret, frame = cap.read()
+            if not ret:
+                raise ValueError(f"Could not read frame {frame_position} for video {video_id}")
+            frame_height = frame.shape[0]
+            x1 = bbox.center_x - bbox.width // 2
+            y1 = frame_height - bbox.center_y - bbox.height // 2
+            x2 = x1 + bbox.width
+            y2 = y1 + bbox.height
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(frame.shape[1], x2), min(frame_height, y2)
+            return Image(frame[y1:y2, x1:x2].astype(np.uint8))
+        finally:
+            cap.release()

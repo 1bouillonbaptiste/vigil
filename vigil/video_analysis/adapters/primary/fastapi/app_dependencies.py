@@ -84,6 +84,11 @@ def get_detect_objects_use_case(
 def get_track_objects_use_case(
     tracker=Depends(_get_tracker),
     track_repository=Depends(_get_track_repository),
+    domain_event_publisher=Depends(_get_domain_event_publisher),
 ) -> TrackObjectsUseCase:
     """Get the `TrackObjectsUseCase`."""
-    return TrackObjectsUseCase(tracker=tracker, track_repository=track_repository)
+    return TrackObjectsUseCase(
+        tracker=tracker,
+        track_repository=track_repository,
+        domain_event_publisher=domain_event_publisher,
+    )

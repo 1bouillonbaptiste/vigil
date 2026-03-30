@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
+from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
 from vigil.video_analysis.adapters.secondary.fake_tracker import FakeTracker
 from vigil.video_analysis.adapters.secondary.in_memory_track_repository import InMemoryTrackRepository
 from vigil.video_analysis.business_logic.models.detection import BoundingBox, ClassLabel, Detection, Prediction
@@ -17,11 +18,13 @@ _FRAME_ID_1 = IdFactory.new_frame_id(video_id=VIDEO_ID, position=1)
 _BBOX = BoundingBox(center_x=10, center_y=10, width=5, height=5)
 
 _DETECTION_0 = Detection(
+    id=IdFactory.new_detection_id(_FRAME_ID_0, _BBOX),
     frame_id=_FRAME_ID_0,
     frame_position=0,
     prediction=Prediction(bbox=_BBOX, confidence=0.9, label=ClassLabel.PERSON),
 )
 _DETECTION_1 = Detection(
+    id=IdFactory.new_detection_id(_FRAME_ID_1, _BBOX),
     frame_id=_FRAME_ID_1,
     frame_position=1,
     prediction=Prediction(bbox=_BBOX, confidence=0.9, label=ClassLabel.PERSON),
@@ -37,7 +40,11 @@ class ThisContext:
 @pytest.fixture
 def this_context() -> ThisContext:
     track_repository = InMemoryTrackRepository()
-    use_case = TrackObjectsUseCase(tracker=FakeTracker(), track_repository=track_repository)
+    use_case = TrackObjectsUseCase(
+        tracker=FakeTracker(),
+        track_repository=track_repository,
+        domain_event_publisher=InMemoryEventPublisher(),
+    )
     return ThisContext(track_repository=track_repository, use_case=use_case)
 
 

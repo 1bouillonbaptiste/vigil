@@ -6,9 +6,11 @@ from typing import Final
 from fastapi import FastAPI
 
 from vigil.app.fastapi.config import AppConfig
+from vigil.embedding.adapters.primary.events_subscriber.track_identified_subscriber import TrackIdentifiedSubscriber
 from vigil.embedding.adapters.primary.fastapi.controllers import query_by_description
 from vigil.embedding.adapters.secondary.fake_embedding_model import FakeEmbeddingModel
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
+from vigil.embedding.business_logic.use_cases.index_track import IndexTrackUseCase
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import (
     FrameDetectedSubscriber as MonitoringFrameDetectedSubscriber,
 )
@@ -40,15 +42,26 @@ async def lifespan(app: FastAPI):
     track_repository = InMemoryTrackRepository()
     analysis_job_repository = InMemoryAnalysisJobRepository()
 
+    embedded_track_repository = InMemoryEmbeddedTrackRepository()
+    embedding_model = FakeEmbeddingModel()
+
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     MonitoringFrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
+    TrackIdentifiedSubscriber(
+        publisher=domain_event_publisher,
+        use_case=IndexTrackUseCase(
+            track_repository=embedded_track_repository,
+            frame_reader=video_repository,
+            model=embedding_model,
+        ),
+    ).subscribe()
 
     app.state.video_repository = video_repository
     app.state.detection_model = detection_model
     app.state.track_repository = track_repository
     app.state.analysis_job_repository = analysis_job_repository
-    app.state.embedded_track_repository = InMemoryEmbeddedTrackRepository()
-    app.state.embedding_model = FakeEmbeddingModel()
+    app.state.embedded_track_repository = embedded_track_repository
+    app.state.embedding_model = embedding_model
 
     yield
 
