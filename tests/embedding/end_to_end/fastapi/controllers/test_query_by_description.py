@@ -8,20 +8,12 @@ from vigil.embedding.adapters.primary.fastapi.app_dependencies import (
     _get_embedded_track_repository,
     _get_embedding_model,
 )
+from vigil.embedding.adapters.secondary.fake_embedding_model import FakeEmbeddingModel
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
-from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingModel
 from vigil.embedding.business_logic.models.embedded_track import EmbeddedTrack, Embedding
 
 TRACK_ID = UUID("d1291c59-9e3a-4190-9142-eba82ed0e08f")
 TRACK_ID_2 = uuid4()
-
-
-class FakeEmbeddingModel(EmbeddingModel):
-    """Fake embedding model for testing purposes."""
-
-    def embed(self, description: str) -> Embedding:
-        """Fake the model output."""
-        return Embedding((0.5, 0.5))
 
 
 @dataclass
