@@ -22,6 +22,10 @@ class FakeEmbeddingModel(EmbeddingModel):
         """Fake the model output."""
         return Embedding((0.5, 0.5))
 
+    def embed_image(self, data: object) -> Embedding:
+        """Unused stub."""
+        raise NotImplementedError
+
 
 @dataclass
 class ThisContext:

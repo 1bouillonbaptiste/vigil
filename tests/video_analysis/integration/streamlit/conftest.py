@@ -39,6 +39,10 @@ class _FakeEmbeddingModel(EmbeddingModel):
         """Return a fixed embedding regardless of input."""
         return Embedding((0.5, 0.5))
 
+    def embed_image(self, data: object) -> Embedding:
+        """Unused stub."""
+        raise NotImplementedError
+
 
 _VIDEO_FRAMES = 10
 _VIDEO_SIZE = (64, 64)
