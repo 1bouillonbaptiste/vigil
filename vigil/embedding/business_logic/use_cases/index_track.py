@@ -22,7 +22,7 @@ class IndexTrackUseCase:
     def execute(self, track_id: UUID, detections: list[UUID]) -> None:
         """Execute the use case given track data."""
         crops = [self._crop_provider.get_by_detection(detection_id) for detection_id in detections]
-        embeddings = self._model.embed_image(crops)
+        embeddings = self._model.embed_image_batch(crops)
         self._track_repository.save(
             EmbeddedTrack(
                 id=track_id,

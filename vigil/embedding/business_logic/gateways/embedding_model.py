@@ -1,9 +1,7 @@
 from typing import Protocol
 
-import numpy as np
-import numpy.typing as npt
-
 from vigil.embedding.business_logic.models.embedded_track import Embedding
+from vigil.embedding.business_logic.models.image import Image
 
 
 class EmbeddingModel(Protocol):
@@ -13,6 +11,6 @@ class EmbeddingModel(Protocol):
         """Compute and return a text embedding."""
         ...
 
-    def embed_image(self, data: list[npt.NDArray[np.uint8]]) -> list[Embedding]:
+    def embed_image_batch(self, data: list[Image]) -> list[Embedding]:
         """Compute and return image embeddings for a batch of crops."""
         ...

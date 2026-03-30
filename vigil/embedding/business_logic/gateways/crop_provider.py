@@ -1,13 +1,12 @@
 from typing import Protocol
 from uuid import UUID
 
-import numpy as np
-import numpy.typing as npt
+from vigil.embedding.business_logic.models.image import Image
 
 
 class CropProvider(Protocol):
     """Interface for retrieving cropped image data for a detection."""
 
-    def get_by_detection(self, detection_id: UUID) -> npt.NDArray[np.uint8]:
+    def get_by_detection(self, detection_id: UUID) -> Image:
         """Return the image crop associated with the given detection."""
         ...
