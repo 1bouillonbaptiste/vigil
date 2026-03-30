@@ -11,6 +11,6 @@ class EmbeddingModel(Protocol):
         """Compute and return a text embedding."""
         ...
 
-    def embed_image_batch(self, data: list[Image]) -> list[Embedding]:
+    def embed_images(self, batch: list[Image]) -> list[Embedding]:
         """Compute and return image embeddings for a batch of crops."""
         ...
