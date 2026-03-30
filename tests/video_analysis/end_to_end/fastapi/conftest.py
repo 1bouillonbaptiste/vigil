@@ -29,9 +29,3 @@ def fake_video_filepath(tmp_path: Path) -> Path:
         writer.write(np.full((64, 64, 3), i * 25, dtype=np.uint8))
     writer.release()
     return filepath
-
-
-@pytest.fixture(scope="function")
-def realistic_video_filepath(test_data_dir: Path) -> Path:
-    """Return the path to the realistic 10-frame people video fixture."""
-    return test_data_dir / "people_10frames.mp4"

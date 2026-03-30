@@ -17,7 +17,7 @@ class ThisContext:
     client: TestClient
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def this_context() -> Generator[ThisContext, None, None]:
     detection_model = make_yolo_detection_model(model_name="yolov8n")
     app.dependency_overrides[_get_detection_model] = lambda: detection_model
@@ -26,13 +26,7 @@ def this_context() -> Generator[ThisContext, None, None]:
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(scope="module")
-def realistic_video_filepath() -> Path:
-    """Return the path to the realistic 10-frame people video fixture."""
-    return Path(__file__).parent.parent.parent / "data" / "people_10frames.mp4"
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def video_id(this_context: ThisContext, realistic_video_filepath: Path) -> str:
     """Upload a video, run analysis, and return the video_id."""
     with open(realistic_video_filepath, "rb") as f:
@@ -52,3 +46,9 @@ def test_analysis_completes_all_frames(this_context: ThisContext, video_id: str)
 def test_first_detection_bbox(this_context: ThisContext, video_id: str) -> None:
     tracks = this_context.client.get(f"/videos/{video_id}/tracks").json()["tracks"]
     assert tracks[0]["detections"][0]["bbox"] == {"center_x": 345, "center_y": 394, "width": 102, "height": 343}
+
+
+def test_should_embed_a_track_after_analysis(this_context: ThisContext, video_id: str) -> None:
+    response = this_context.client.get("/tracks/by-description", params={"description": ""}).json()
+    assert response["status"] == "success"
+    assert len(response["content"]["tracks"]) > 0
