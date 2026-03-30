@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from starlette.testclient import TestClient
@@ -13,6 +13,7 @@ from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingMod
 from vigil.embedding.business_logic.models.embedded_track import EmbeddedTrack, Embedding
 
 TRACK_ID = UUID("d1291c59-9e3a-4190-9142-eba82ed0e08f")
+TRACK_ID_2 = uuid4()
 
 
 class FakeEmbeddingModel(EmbeddingModel):
@@ -54,5 +55,22 @@ def test_can_query_an_existing_track_by_its_description(this_context: ThisContex
     assert response.json() == {
         "status": "success",
         "content": {"tracks": [str(TRACK_ID)]},
+        "error": None,
+    }
+
+
+def test_should_return_all_tracks_on_empty_description(this_context: ThisContext):
+    # Given
+    this_context.embedded_track_repo.save(EmbeddedTrack(id=TRACK_ID, detections=(Embedding((0.5, 0.5)),)))
+    this_context.embedded_track_repo.save(EmbeddedTrack(id=TRACK_ID_2, detections=(Embedding((0.01, 0.99)),)))
+
+    # When
+    response = this_context.client.get("/tracks/by-description", params={"description": ""})
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "success",
+        "content": {"tracks": [str(TRACK_ID), str(TRACK_ID_2)]},
         "error": None,
     }
