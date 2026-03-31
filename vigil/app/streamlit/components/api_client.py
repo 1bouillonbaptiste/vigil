@@ -54,3 +54,17 @@ class VigilClient:
     def get_tracks(self, video_id: str) -> list[TrackData]:
         """Retrieve all object tracks for a processed video."""
         return tracks_from_payload(self._request("GET", f"/videos/{video_id}/tracks").json())
+
+    def get_tracks_by_description(self, video_id: str, description: str) -> list[TrackData]:
+        """Retrieve tracks from a video matching the given description.
+
+        When description is empty all tracks for the video are returned.
+        Otherwise the result is the intersection of the video's tracks and the
+        tracks that match the description in the embedding index.
+        """
+        video_tracks = self.get_tracks(video_id)
+        if not description:
+            return video_tracks
+        response = self._request("GET", "/tracks/by-description", params={"description": description})
+        matching_ids: set[str] = {str(track_id) for track_id in response.json()["content"]["tracks"]}
+        return [track for track in video_tracks if track.id in matching_ids]
