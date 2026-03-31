@@ -21,6 +21,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install make
+      run: apt-get update && apt-get install -y --no-install-recommends make
+
     - name: Setup the environment
       uses: ./.github/actions/setup-poetry-env
 
