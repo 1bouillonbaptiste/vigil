@@ -15,14 +15,16 @@ fastapi = "^0.135.1"
 uvicorn = "^0.42.0"
 httpx = "^0.28.1"
 python-multipart = "^0.0.22"
-ultralytics = ">=8.3,<9"
 streamlit = "^1.55.0"
 imageio = "^2.37.3"
 imageio-ffmpeg = "^0.6.0"
 pyyaml = ">=6.0,<7"
 lap = "^0.5.13"
-transformers = ">=4.50,<5"
+
+[tool.poetry.group.inference.dependencies]
 torch = ">=2.6,<3"
+transformers = ">=4.50,<5"
+ultralytics = ">=8.3,<9"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -48,3 +50,8 @@ skip_empty = true
 
 [tool.coverage.run]
 omit = ["tests/*"]
+
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = "ultralytics.*"
+ignore_missing_imports = true

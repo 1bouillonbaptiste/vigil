@@ -9,9 +9,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: apt-get update && apt-get install -y --no-install-recommends make git
+
+    - name: Mark workspace as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Setup the environment
       uses: ./.github/actions/setup-poetry-env

@@ -2,5 +2,10 @@
 # Rebuild this image when upgrading torch or transformers versions.
 FROM python:3.13-slim
 
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir "transformers>=4.50,<5"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    make git libxcb1 libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/* \
+    && git config --system --add safe.directory '*'
+
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir "transformers>=4.50,<5" "ultralytics>=8.3,<9"
