@@ -1,0 +1,7 @@
+# CI image: Python 3.13 + CPU-only torch + transformers pre-installed.
+# Rebuild this image when upgrading torch or transformers versions.
+FROM python:3.13-slim
+
+RUN pip install --no-cache-dir \
+    torch --index-url https://download.pytorch.org/whl/cpu \
+    transformers
