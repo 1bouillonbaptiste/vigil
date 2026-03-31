@@ -48,7 +48,4 @@ class ClipEmbeddingModel:
         with torch.no_grad():
             features: torch.Tensor = self._model.get_image_features(**inputs)
         normalized = features / features.norm(dim=-1, keepdim=True)
-        return [
-            Embedding(tuple(float(x) for x in row.cpu().numpy()))
-            for row in normalized
-        ]
+        return [Embedding(tuple(float(x) for x in row.cpu().numpy())) for row in normalized]

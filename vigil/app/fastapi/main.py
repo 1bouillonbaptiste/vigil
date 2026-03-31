@@ -10,6 +10,7 @@ from vigil.embedding.adapters.primary.events_subscriber.track_identified_subscri
 from vigil.embedding.adapters.primary.fastapi.controllers import query_by_description
 from vigil.embedding.adapters.secondary.clip_embedding_model import ClipEmbeddingModel
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
+from vigil.embedding.business_logic.services.embedding_matcher import EmbeddingMatcher
 from vigil.embedding.business_logic.use_cases.index_track import IndexTrackUseCase
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import (
     FrameDetectedSubscriber as MonitoringFrameDetectedSubscriber,
@@ -27,6 +28,7 @@ from vigil.video_analysis.adapters.secondary.local_video_repository import Local
 from vigil.video_analysis.adapters.secondary.yolo_detection_model import make_yolo_detection_model
 
 _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
+_NULL_DESCRIPTION: Final[str] = "a random unrelated scene"
 
 
 @asynccontextmanager
@@ -44,6 +46,7 @@ async def lifespan(app: FastAPI):
 
     embedded_track_repository = InMemoryEmbeddedTrackRepository()
     embedding_model = ClipEmbeddingModel()
+    embedding_matcher = EmbeddingMatcher(null_embedding=embedding_model.embed(_NULL_DESCRIPTION))
 
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     MonitoringFrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
@@ -62,6 +65,7 @@ async def lifespan(app: FastAPI):
     app.state.analysis_job_repository = analysis_job_repository
     app.state.embedded_track_repository = embedded_track_repository
     app.state.embedding_model = embedding_model
+    app.state.embedding_matcher = embedding_matcher
 
     yield
 
