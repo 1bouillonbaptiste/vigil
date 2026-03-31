@@ -15,8 +15,8 @@ TRACK_ID_2 = UUID("395634fe-cfa1-4c37-b264-32c6886fd274")
 # FakeEmbeddingModel always returns Embedding((0.5, 0.5)) for any description.
 # MATCHING_EMBEDDING is aligned with that output  → probability ≈ 1.0.
 # NON_MATCHING_EMBEDDING is the opposite direction → probability ≈ 0.0.
-# NULL_EMBEDDING is perpendicular to both         → acts as the neutral baseline.
-NULL_EMBEDDING = Embedding((0.5, -0.5))
+# NEUTRAL_EMBEDDING is perpendicular to both      → acts as the neutral baseline.
+NEUTRAL_EMBEDDING = Embedding((0.5, -0.5))
 MATCHING_EMBEDDING = Embedding((0.5, 0.5))
 NON_MATCHING_EMBEDDING = Embedding((-0.5, -0.5))
 
@@ -31,7 +31,7 @@ class ThisContext:
 def this_context() -> ThisContext:
     repository = InMemoryEmbeddedTrackRepository()
     model = FakeEmbeddingModel()
-    matcher = EmbeddingMatcher(null_embedding=NULL_EMBEDDING)
+    matcher = EmbeddingMatcher(neutral_embedding=NEUTRAL_EMBEDDING)
     return ThisContext(
         repository=repository,
         use_case=FindSimilarTracksUseCase(repository=repository, model=model, matcher=matcher),

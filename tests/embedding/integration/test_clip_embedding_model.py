@@ -51,8 +51,8 @@ def test_similar_descriptions_should_have_higher_similarity_than_dissimilar(mode
 def test_cat_image_should_match_cat_description_with_high_probability(
     model: ClipEmbeddingModel, realistic_cat_image: Image
 ) -> None:
-    null_embedding = model.embed("a random unrelated scene")
-    matcher = EmbeddingMatcher(null_embedding=null_embedding)
+    neutral_embedding = model.embed("a random unrelated scene")
+    matcher = EmbeddingMatcher(neutral_embedding=neutral_embedding)
 
     [cat_embedding] = model.embed_images([realistic_cat_image])
 

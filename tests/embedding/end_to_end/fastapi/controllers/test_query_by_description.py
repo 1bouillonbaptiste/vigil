@@ -17,9 +17,9 @@ TRACK_ID = UUID("d1291c59-9e3a-4190-9142-eba82ed0e08f")
 TRACK_ID_2 = uuid4()
 
 # FakeEmbeddingModel always returns Embedding((0.5, 0.5)).
-# Use a null embedding perpendicular to that so stored tracks with (0.5, 0.5)
+# Use a neutral embedding perpendicular to that so stored tracks with (0.5, 0.5)
 # have probability ≈ 1.0 and are always returned.
-_FAKE_NULL_EMBEDDING = Embedding((0.5, -0.5))
+_FAKE_NEUTRAL_EMBEDDING = Embedding((0.5, -0.5))
 
 
 @pytest.fixture(scope="function")
@@ -28,7 +28,7 @@ def this_context(fastapi_client: TestClient) -> tuple[InMemoryEmbeddedTrackRepos
     fastapi_client.app.dependency_overrides[_get_embedded_track_repository] = lambda: repo  # type: ignore
     fastapi_client.app.dependency_overrides[_get_embedding_model] = lambda: FakeEmbeddingModel()  # type: ignore
     fastapi_client.app.dependency_overrides[_get_embedding_matcher] = lambda: EmbeddingMatcher(  # type: ignore
-        null_embedding=_FAKE_NULL_EMBEDDING
+        neutral_embedding=_FAKE_NEUTRAL_EMBEDDING
     )
     return repo, fastapi_client
 

@@ -28,7 +28,15 @@ from vigil.video_analysis.adapters.secondary.local_video_repository import Local
 from vigil.video_analysis.adapters.secondary.yolo_detection_model import make_yolo_detection_model
 
 _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
-_NULL_DESCRIPTION: Final[str] = "a random unrelated scene"
+"""Configuration for runtime parameters."""
+
+_NEUTRAL_DESCRIPTION: Final[str] = "a random unrelated scene"
+"""Baseline description used to calibrate EmbeddingMatcher probabilities.
+
+CLIP cosine similarities are not calibrated as absolute values, so we score each
+image embedding against this neutral description as a reference point.  A track
+embedding that scores higher than this baseline is considered a match.
+"""
 
 
 @asynccontextmanager
@@ -46,7 +54,7 @@ async def lifespan(app: FastAPI):
 
     embedded_track_repository = InMemoryEmbeddedTrackRepository()
     embedding_model = ClipEmbeddingModel()
-    embedding_matcher = EmbeddingMatcher(null_embedding=embedding_model.embed(_NULL_DESCRIPTION))
+    embedding_matcher = EmbeddingMatcher(neutral_embedding=embedding_model.embed(_NEUTRAL_DESCRIPTION))
 
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     MonitoringFrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()

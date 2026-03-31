@@ -3,7 +3,7 @@ from typing import Final
 
 import torch
 from PIL import Image as PILImage
-from transformers import CLIPModel, CLIPProcessor, CLIPTokenizer
+from transformers import CLIPModel, CLIPProcessor
 
 from vigil.embedding.business_logic.models.embedded_track import Embedding
 from vigil.shared_kernel.models.image import Image
@@ -22,9 +22,6 @@ class ClipEmbeddingModel:
 
     def __init__(self) -> None:
         _MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        self._tokenizer: CLIPTokenizer = CLIPTokenizer.from_pretrained(  # type: ignore[assignment]
-            _CLIP_MODEL_NAME, cache_dir=_MODELS_DIR
-        )
         self._processor: CLIPProcessor = CLIPProcessor.from_pretrained(  # type: ignore[assignment]
             _CLIP_MODEL_NAME, cache_dir=_MODELS_DIR
         )
@@ -35,7 +32,7 @@ class ClipEmbeddingModel:
 
     def embed(self, description: str) -> Embedding:
         """Return a normalized CLIP text embedding for the given description."""
-        inputs = self._tokenizer(description, return_tensors="pt", padding=True, truncation=True)
+        inputs = self._processor(text=description, return_tensors="pt", padding=True, truncation=True)
         with torch.no_grad():
             features: torch.Tensor = self._model.get_text_features(**inputs)
         normalized = features / features.norm(dim=-1, keepdim=True)
