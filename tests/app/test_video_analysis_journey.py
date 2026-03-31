@@ -17,7 +17,7 @@ class ThisContext:
     client: TestClient
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def this_context() -> Generator[ThisContext, None, None]:
     detection_model = make_yolo_detection_model(model_name="yolov8n")
     app.dependency_overrides[_get_detection_model] = lambda: detection_model
@@ -26,7 +26,7 @@ def this_context() -> Generator[ThisContext, None, None]:
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def video_id(this_context: ThisContext, realistic_video_filepath: Path) -> str:
     """Upload a video, run analysis, and return the video_id."""
     with open(realistic_video_filepath, "rb") as f:

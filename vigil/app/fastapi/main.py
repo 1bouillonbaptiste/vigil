@@ -8,8 +8,9 @@ from fastapi import FastAPI
 from vigil.app.fastapi.config import AppConfig
 from vigil.embedding.adapters.primary.events_subscriber.track_identified_subscriber import TrackIdentifiedSubscriber
 from vigil.embedding.adapters.primary.fastapi.controllers import query_by_description
-from vigil.embedding.adapters.secondary.fake_embedding_model import FakeEmbeddingModel
+from vigil.embedding.adapters.secondary.clip_embedding_model import ClipEmbeddingModel
 from vigil.embedding.adapters.secondary.in_memory_embedded_track_repository import InMemoryEmbeddedTrackRepository
+from vigil.embedding.business_logic.services.embedding_matcher import EmbeddingMatcher
 from vigil.embedding.business_logic.use_cases.index_track import IndexTrackUseCase
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import (
     FrameDetectedSubscriber as MonitoringFrameDetectedSubscriber,
@@ -27,6 +28,15 @@ from vigil.video_analysis.adapters.secondary.local_video_repository import Local
 from vigil.video_analysis.adapters.secondary.yolo_detection_model import make_yolo_detection_model
 
 _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
+"""Configuration for runtime parameters."""
+
+_NEUTRAL_DESCRIPTION: Final[str] = "a random unrelated scene"
+"""Baseline description used to calibrate EmbeddingMatcher probabilities.
+
+CLIP cosine similarities are not calibrated as absolute values, so we score each
+image embedding against this neutral description as a reference point.  A track
+embedding that scores higher than this baseline is considered a match.
+"""
 
 
 @asynccontextmanager
@@ -43,7 +53,8 @@ async def lifespan(app: FastAPI):
     analysis_job_repository = InMemoryAnalysisJobRepository()
 
     embedded_track_repository = InMemoryEmbeddedTrackRepository()
-    embedding_model = FakeEmbeddingModel()
+    embedding_model = ClipEmbeddingModel()
+    embedding_matcher = EmbeddingMatcher(neutral_embedding=embedding_model.embed(_NEUTRAL_DESCRIPTION))
 
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     MonitoringFrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
@@ -62,6 +73,7 @@ async def lifespan(app: FastAPI):
     app.state.analysis_job_repository = analysis_job_repository
     app.state.embedded_track_repository = embedded_track_repository
     app.state.embedding_model = embedding_model
+    app.state.embedding_matcher = embedding_matcher
 
     yield
 

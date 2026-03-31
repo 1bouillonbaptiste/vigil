@@ -34,10 +34,3 @@ class EmbeddedTrack:
 
     detections: tuple[Embedding, ...]
     """Detections embeddings."""
-
-    def similarity(self, embedding: Embedding) -> float:
-        """How close a track is to an embedding."""
-        if not self.detections:
-            return 0
-        similarities: list[float] = [embedding.cosine(detection) for detection in self.detections]
-        return sum(similarities) / len(similarities)
