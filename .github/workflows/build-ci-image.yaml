@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/docker/Dockerfile.ci"
       - "pyproject.toml"
+      - "poetry.lock"
   workflow_dispatch:
 
 env:
@@ -31,7 +32,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .github/docker
+          context: .
           file: .github/docker/Dockerfile.ci
           push: true
           tags: ${{ env.IMAGE }}:latest
