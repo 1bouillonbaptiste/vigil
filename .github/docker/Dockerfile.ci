@@ -1,5 +1,5 @@
-# CI image: Python 3.13 + CPU-only torch + transformers pre-installed.
-# Rebuild this image when upgrading torch or transformers versions.
+# CI image: Python 3.13 + inference group pre-installed from poetry.lock.
+# Rebuilt automatically when Dockerfile.ci, pyproject.toml, or poetry.lock changes.
 FROM python:3.13-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -7,5 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && git config --system --add safe.directory '*'
 
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir "transformers>=4.50,<5" "ultralytics>=8.3,<9"
+COPY pyproject.toml poetry.lock ./
+
+RUN pip install --no-cache-dir poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --only inference --no-interaction --no-root \
+    && pip uninstall -y poetry
