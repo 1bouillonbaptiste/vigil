@@ -2,9 +2,10 @@ name: Build CI image
 
 on:
   push:
-    branches: ["*"]
+    branches: ["master"]
     paths:
       - ".github/docker/Dockerfile.ci"
+      - "pyproject.toml"
   workflow_dispatch:
 
 env:

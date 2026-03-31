@@ -21,12 +21,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install system dependencies
-      run: apt-get update && apt-get install -y --no-install-recommends make git
-
-    - name: Mark workspace as safe for git
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
     - name: Setup the environment
       uses: ./.github/actions/setup-poetry-env
 
