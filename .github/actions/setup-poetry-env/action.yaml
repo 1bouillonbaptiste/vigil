@@ -1,5 +1,5 @@
 name: "setup-poetry-env"
-description: 'Sets up Poetry with caching, using system-installed torch/transformers'
+description: 'Sets up Poetry and installs dependencies, using system-installed torch/transformers'
 
 inputs:
   python-version:
@@ -21,14 +21,6 @@ runs:
     run: poetry config virtualenvs.options.system-site-packages true
     shell: bash
 
-  - name: Cache Poetry virtual environment
-    uses: actions/cache@v3
-    with:
-      path: .venv
-      key: ${{ runner.os }}-venv-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      restore-keys: |
-        ${{ runner.os }}-venv-${{ inputs.python-version }}-
-
   - name: Install dependencies
-    run: poetry install --no-interaction
+    run: poetry install --no-interaction --without inference
     shell: bash
