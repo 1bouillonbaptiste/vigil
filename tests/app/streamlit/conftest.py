@@ -17,6 +17,9 @@ from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingMod
 from vigil.embedding.business_logic.models.embedded_track import Embedding
 from vigil.embedding.business_logic.services.embedding_matcher import EmbeddingMatcher
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import FrameDetectedSubscriber
+from vigil.monitoring.adapters.primary.events_subscriber.tracking_finished_subscriber import (
+    TrackingFinishedSubscriber,
+)
 from vigil.monitoring.adapters.primary.events_subscriber.video_created_subscriber import VideoCreatedSubscriber
 from vigil.monitoring.adapters.secondary.in_memory_analysis_job_repository import InMemoryAnalysisJobRepository
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
@@ -61,6 +64,7 @@ def vigil_client(tmp_path: Path) -> Generator[TestClient, None, None]:
 
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     FrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
+    TrackingFinishedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
 
     app.dependency_overrides[_get_video_repository] = lambda: video_repository
     app.dependency_overrides[_get_track_repository] = lambda: track_repository
@@ -115,6 +119,7 @@ def vigil_client_with_embedding(
 
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     FrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
+    TrackingFinishedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
 
     app.dependency_overrides[_get_video_repository] = lambda: video_repository
     app.dependency_overrides[_get_track_repository] = lambda: track_repository

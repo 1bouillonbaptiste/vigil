@@ -6,6 +6,7 @@ from vigil.video_analysis.business_logic.gateways.tracker import Tracker
 from vigil.video_analysis.business_logic.models.detection import Detection
 from vigil.video_analysis.business_logic.models.track import Track
 from vigil.video_analysis.business_logic.models.track_identified import TrackedDetection, TrackIdentified
+from vigil.video_analysis.business_logic.models.tracking_finished import TrackingFinished
 from vigil.video_analysis.business_logic.services.id_factory import IdFactory
 
 
@@ -45,3 +46,4 @@ class TrackObjectsUseCase:
                     ),
                 )
             )
+        self._domain_event_publisher.publish(TrackingFinished(video_id=video_id))

@@ -5,6 +5,9 @@ from uuid import UUID
 from starlette.testclient import TestClient
 
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import FrameDetectedSubscriber
+from vigil.monitoring.adapters.primary.events_subscriber.tracking_finished_subscriber import (
+    TrackingFinishedSubscriber,
+)
 from vigil.monitoring.adapters.primary.events_subscriber.video_created_subscriber import VideoCreatedSubscriber
 from vigil.monitoring.adapters.secondary.in_memory_analysis_job_repository import InMemoryAnalysisJobRepository
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
@@ -39,6 +42,7 @@ def _make_wired_monitoring(tmp_path: Path):
     repository = InMemoryAnalysisJobRepository()
     VideoCreatedSubscriber(publisher=publisher, repository=repository).subscribe()
     FrameDetectedSubscriber(publisher=publisher, repository=repository).subscribe()
+    TrackingFinishedSubscriber(publisher=publisher, repository=repository).subscribe()
     return publisher, repository
 
 
@@ -66,7 +70,7 @@ def test_returns_frame_counts_after_analysis(fastapi_client: TestClient, tmp_pat
     assert body["analyzed_frames"] == 10
 
 
-def test_returns_zero_analyzed_frames_before_analysis_starts(
+def test_returns_total_frames_when_tracking_finishes_with_no_detections(
     fastapi_client: TestClient, tmp_path: Path, fake_video_filepath: Path
 ):
     publisher, repository = _make_wired_monitoring(tmp_path)
@@ -86,7 +90,7 @@ def test_returns_zero_analyzed_frames_before_analysis_starts(
     response = fastapi_client.get(f"/videos/{video_id}/status")
 
     assert response.status_code == 200
-    assert response.json()["analyzed_frames"] == 0
+    assert response.json()["analyzed_frames"] == 10
 
 
 def test_unknown_video_id_raises_404(fastapi_client: TestClient, tmp_path: Path):
