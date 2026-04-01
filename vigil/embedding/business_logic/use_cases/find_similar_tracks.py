@@ -22,7 +22,8 @@ class FindSimilarTracksUseCase:
         if not description:
             return [TrackMatch(id=track.id, score=1.0) for track in self._repository.list_tracks()]
 
-        text_embedding = self._model.embed(description)
+        query = f"This photo shows {description}"
+        text_embedding = self._model.embed(query)
 
         result: list[TrackMatch] = []
         for track in self._repository.list_tracks():

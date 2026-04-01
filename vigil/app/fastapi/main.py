@@ -36,7 +36,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(messa
 _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
 """Configuration for runtime parameters."""
 
-_NEUTRAL_DESCRIPTION: Final[str] = "a random unrelated scene"
+_NEUTRAL_DESCRIPTION: Final[str] = "This photo shows a person."
 """Baseline description used to calibrate EmbeddingMatcher probabilities.
 
 CLIP cosine similarities are not calibrated as absolute values, so we score each
