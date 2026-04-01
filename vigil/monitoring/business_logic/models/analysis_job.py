@@ -8,9 +8,4 @@ class AnalysisJob:
 
     video_id: UUID
     total_frames: int
-    last_frame_position: int = field(default=-1)
-
-    @property
-    def analyzed_frames(self) -> int:
-        """Number of frames analyzed so far (position is 0-indexed)."""
-        return self.last_frame_position + 1
+    analyzed_frames: int = field(default=0)

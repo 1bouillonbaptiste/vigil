@@ -18,5 +18,6 @@ class FrameDetectedSubscriber:
 
     def _on_frame_detected(self, event: FrameDetected) -> None:
         job = self._repository.get_by_id(event.video_id)
-        if event.frame_position > job.last_frame_position:
-            self._repository.update(dataclasses.replace(job, last_frame_position=event.frame_position))
+        new_count = min(event.frame_position + 1, job.total_frames - 1)
+        if new_count > job.analyzed_frames:
+            self._repository.update(dataclasses.replace(job, analyzed_frames=new_count))

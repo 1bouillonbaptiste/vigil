@@ -28,3 +28,9 @@ Frontend (Streamlit):
 ```bash
 poetry run streamlit run vigil/app/streamlit/main.py
 ```
+
+### Dashboard
+
+![detections.png](./docs/detections.png)
+
+![description.png](./docs/description.png)

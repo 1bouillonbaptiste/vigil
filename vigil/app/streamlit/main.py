@@ -23,6 +23,8 @@ st.session_state.setdefault("videos", {})  # dict[str, VideoEntry]
 st.session_state.setdefault("selected_id", None)  # str | None
 st.session_state.setdefault("rendered_path", None)  # Path | None
 st.session_state.setdefault("portrait_video", False)  # bool
+st.session_state.setdefault("description", "")  # str
+st.session_state.setdefault("filter_enabled", False)  # bool
 
 client: VigilClient = VigilClient.default()
 
@@ -75,8 +77,11 @@ def _handle_display() -> None:
 
     entry: VideoEntry = st.session_state.videos[video_id]
 
+    filter_enabled: bool = st.session_state.get("filter_enabled", False)
+    description: str = st.session_state.get("description", "") if filter_enabled else ""
+
     try:
-        tracks = client.get_tracks(video_id)
+        tracks = client.get_tracks_by_description(video_id, description)
         rendered_path = render_video_with_tracks(video_path=entry.file_path, tracks=tracks)
     except VigilAPIError as error:
         st.error(str(error))
@@ -121,6 +126,9 @@ st.markdown(
         max-width: 100% !important;
         width: auto !important;
         height: auto !important;
+    }
+    input::placeholder {
+        font-style: italic;
     }
     </style>
     """,
@@ -179,6 +187,15 @@ with left:
                         st.caption("queued…")
 
     st.divider()
+
+    st.checkbox("Filter by description", key="filter_enabled")
+    st.text_input(
+        "Filter by description",
+        placeholder='e.g. "person wearing a red jacket"',
+        key="description",
+        label_visibility="collapsed",
+        disabled=not st.session_state.filter_enabled,
+    )
 
     selected_id = st.session_state.selected_id
     display_disabled = selected_id is None or selected_id not in videos

@@ -15,11 +15,18 @@ class QueryByDescriptionRequest(BaseModel):
     """Description of the tracks to query from the database."""
 
 
+class TrackMatchResponse(BaseModel):
+    """A track ID with its similarity score."""
+
+    id: UUID
+    score: float
+
+
 class QueryByDescriptionContent(BaseModel):
     """Model for query by description content."""
 
-    tracks: tuple[UUID, ...]
-    """IDs of the tracks matching the description."""
+    tracks: list[TrackMatchResponse]
+    """Tracks matching the description, with their similarity scores."""
 
 
 class QueryByDescriptionResponse(BaseModel):
@@ -35,9 +42,11 @@ def query_by_description(
     description: str,
     use_case=Depends(get_find_similar_tracks_use_case),
 ) -> QueryByDescriptionResponse:
-    """Return IDs of embedded tracks matching the given description."""
-    tracks = use_case.execute(description=description)
+    """Return tracks matching the given description with similarity scores."""
+    matches = use_case.execute(description=description)
     return QueryByDescriptionResponse(
         status="success",
-        content=QueryByDescriptionContent(tracks=tuple(track.id for track in tracks)),
+        content=QueryByDescriptionContent(
+            tracks=[TrackMatchResponse(id=match.id, score=match.score) for match in matches]
+        ),
     )

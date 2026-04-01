@@ -1,3 +1,4 @@
+import logging
 import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,6 +16,9 @@ from vigil.embedding.business_logic.use_cases.index_track import IndexTrackUseCa
 from vigil.monitoring.adapters.primary.events_subscriber.frame_detected_subscriber import (
     FrameDetectedSubscriber as MonitoringFrameDetectedSubscriber,
 )
+from vigil.monitoring.adapters.primary.events_subscriber.tracking_finished_subscriber import (
+    TrackingFinishedSubscriber,
+)
 from vigil.monitoring.adapters.primary.events_subscriber.video_created_subscriber import VideoCreatedSubscriber
 from vigil.monitoring.adapters.secondary.in_memory_analysis_job_repository import InMemoryAnalysisJobRepository
 from vigil.shared_kernel.gateways.in_memory_event_publisher import InMemoryEventPublisher
@@ -27,10 +31,12 @@ from vigil.video_analysis.adapters.secondary.in_memory_track_repository import I
 from vigil.video_analysis.adapters.secondary.local_video_repository import LocalVideoRepository
 from vigil.video_analysis.adapters.secondary.yolo_detection_model import make_yolo_detection_model
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
+
 _CONFIG_PATH: Final[Path] = Path(__file__).parent / "config.yaml"
 """Configuration for runtime parameters."""
 
-_NEUTRAL_DESCRIPTION: Final[str] = "a random unrelated scene"
+_NEUTRAL_DESCRIPTION: Final[str] = "This photo shows a person."
 """Baseline description used to calibrate EmbeddingMatcher probabilities.
 
 CLIP cosine similarities are not calibrated as absolute values, so we score each
@@ -58,6 +64,7 @@ async def lifespan(app: FastAPI):
 
     VideoCreatedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     MonitoringFrameDetectedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
+    TrackingFinishedSubscriber(publisher=domain_event_publisher, repository=analysis_job_repository).subscribe()
     TrackIdentifiedSubscriber(
         publisher=domain_event_publisher,
         use_case=IndexTrackUseCase(

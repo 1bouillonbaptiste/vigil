@@ -45,11 +45,12 @@ def test_can_query_an_existing_track_by_its_description(
 
     # Then
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "success",
-        "content": {"tracks": [str(TRACK_ID)]},
-        "error": None,
-    }
+    body = response.json()
+    assert body["status"] == "success"
+    tracks = body["content"]["tracks"]
+    assert len(tracks) == 1
+    assert tracks[0]["id"] == str(TRACK_ID)
+    assert tracks[0]["score"] > 0.9
 
 
 def test_should_return_all_tracks_on_empty_description(
@@ -65,8 +66,8 @@ def test_should_return_all_tracks_on_empty_description(
 
     # Then
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "success",
-        "content": {"tracks": [str(TRACK_ID), str(TRACK_ID_2)]},
-        "error": None,
-    }
+    body = response.json()
+    assert body["status"] == "success"
+    track_ids = {t["id"] for t in body["content"]["tracks"]}
+    assert track_ids == {str(TRACK_ID), str(TRACK_ID_2)}
+    assert all(t["score"] == 1.0 for t in body["content"]["tracks"])

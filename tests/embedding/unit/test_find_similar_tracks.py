@@ -47,7 +47,9 @@ def test_should_return_matching_track(this_context: ThisContext):
     result = this_context.use_case.execute(description="show me something", min_probability=0.9)
 
     # Then
-    assert result == [EmbeddedTrack(id=TRACK_ID, detections=(MATCHING_EMBEDDING,))]
+    assert len(result) == 1
+    assert result[0].id == TRACK_ID
+    assert result[0].score > 0.9
 
 
 def test_should_exclude_non_matching_track(this_context: ThisContext):
@@ -70,7 +72,5 @@ def test_should_return_all_tracks_on_empty_description(this_context: ThisContext
     result = this_context.use_case.execute(description="")
 
     # Then
-    assert result == [
-        EmbeddedTrack(id=TRACK_ID, detections=(MATCHING_EMBEDDING,)),
-        EmbeddedTrack(id=TRACK_ID_2, detections=(NON_MATCHING_EMBEDDING,)),
-    ]
+    assert [m.id for m in result] == [TRACK_ID, TRACK_ID_2]
+    assert all(m.score == 1.0 for m in result)

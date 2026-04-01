@@ -35,9 +35,9 @@ def test_should_return_zero_analyzed_frames_for_new_job(this_context: ThisContex
     assert status.total_frames == 10
 
 
-def test_should_reflect_last_detected_frame_position(this_context: ThisContext) -> None:
+def test_should_reflect_analyzed_frames(this_context: ThisContext) -> None:
     # Given
-    job = AnalysisJob(video_id=VIDEO_ID, total_frames=10, last_frame_position=4)
+    job = AnalysisJob(video_id=VIDEO_ID, total_frames=10, analyzed_frames=5)
     this_context.repository.create(job)
 
     # When
