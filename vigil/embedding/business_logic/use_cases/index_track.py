@@ -20,9 +20,17 @@ class IndexTrackUseCase:
         self._frame_reader = frame_reader
         self._model = model
 
+    @staticmethod
+    def _sample(detections: list[DetectionRef], n: int) -> list[DetectionRef]:
+        if n == 1:
+            return [detections[0]]
+        step = (len(detections) - 1) / (n - 1)
+        return [detections[int(i * step)] for i in range(n)]
+
     def execute(self, track_id: UUID, video_id: UUID, detections: list[DetectionRef]) -> None:
         """Crop each detection, embed it, and save the embedded track."""
-        crops = [self._frame_reader.read_crop(video_id, d.frame_position, d.bbox) for d in detections]
+        sampled = self._sample(detections, min(5, len(detections)))
+        crops = [self._frame_reader.read_crop(video_id, d.frame_position, d.bbox) for d in sampled]
         embeddings = self._model.embed_images(crops)
         self._track_repository.save(
             EmbeddedTrack(
