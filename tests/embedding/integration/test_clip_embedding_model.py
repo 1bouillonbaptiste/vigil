@@ -40,6 +40,20 @@ def test_should_embed_image_batch(model: ClipEmbeddingModel) -> None:
     assert len(embeddings[0].numpy()) == 512
 
 
+def test_pad_to_square_should_produce_square_image_with_black_fill() -> None:
+    tall_narrow = PILImage.fromarray(np.ones((90, 30, 3), dtype=np.uint8) * 200)
+
+    padded = ClipEmbeddingModel._pad_to_square(tall_narrow)
+
+    assert padded.size == (90, 90)
+    arr = np.array(padded)
+    # original content is preserved in the center columns
+    assert np.all(arr[:, 30:60] == 200)
+    # padding columns are black
+    assert np.all(arr[:, :15] == 0)
+    assert np.all(arr[:, 75:] == 0)
+
+
 def test_similar_descriptions_should_have_higher_similarity_than_dissimilar(model: ClipEmbeddingModel) -> None:
     cat = model.embed("a cat sitting on a mat")
     another_cat = model.embed("a cat resting on a rug")
