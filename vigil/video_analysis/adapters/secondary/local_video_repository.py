@@ -61,6 +61,23 @@ class LocalVideoRepository(VideoRepository, FrameReader):
             raise VideoNotFoundError(video_id)
         return self._frame_counts[video_id]
 
+    @staticmethod
+    def _expand_crop_coords(
+        center_x: int,
+        center_y: int,
+        width: int,
+        height: int,
+        frame_width: int,
+        frame_height: int,
+    ) -> tuple[int, int, int, int]:
+        """Expand bbox by 10% of its largest side, clamped to frame bounds."""
+        margin = int(max(width, height) * 0.1)
+        x1 = max(0, center_x - width // 2 - margin)
+        y1 = max(0, frame_height - center_y - height // 2 - margin)
+        x2 = min(frame_width, center_x + width // 2 + margin)
+        y2 = min(frame_height, frame_height - center_y + height // 2 + margin)
+        return x1, y1, x2, y2
+
     def read_crop(self, video_id: UUID, frame_position: int, bbox: BoundingBox) -> Image:
         """Seek to `frame_position` and return the region clipped to `bbox`."""
         if video_id not in self._paths:
@@ -71,13 +88,15 @@ class LocalVideoRepository(VideoRepository, FrameReader):
             ret, frame = cap.read()
             if not ret:
                 raise ValueError(f"Could not read frame {frame_position} for video {video_id}")
-            frame_height = frame.shape[0]
-            x1 = bbox.center_x - bbox.width // 2
-            y1 = frame_height - bbox.center_y - bbox.height // 2
-            x2 = x1 + bbox.width
-            y2 = y1 + bbox.height
-            x1, y1 = max(0, x1), max(0, y1)
-            x2, y2 = min(frame.shape[1], x2), min(frame_height, y2)
+            frame_height, frame_width = frame.shape[:2]
+            x1, y1, x2, y2 = self._expand_crop_coords(
+                bbox.center_x,
+                bbox.center_y,
+                bbox.width,
+                bbox.height,
+                frame_width=frame_width,
+                frame_height=frame_height,
+            )
             return Image(frame[y1:y2, x1:x2].astype(np.uint8))
         finally:
             cap.release()
