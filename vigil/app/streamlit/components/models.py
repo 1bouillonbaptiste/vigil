@@ -28,6 +28,7 @@ class TrackData:
 
     id: str
     detections: tuple[DetectionData, ...]
+    match_score: float | None = None
 
 
 @dataclass(frozen=True)

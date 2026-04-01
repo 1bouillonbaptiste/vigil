@@ -102,3 +102,5 @@ def test_get_tracks_by_description_returns_intersection_of_video_tracks_and_matc
 
     assert len(result) == 1
     assert result[0].id == str(matching_id)
+    assert result[0].match_score is not None
+    assert result[0].match_score > 0.9

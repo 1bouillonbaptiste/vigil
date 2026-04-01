@@ -20,20 +20,22 @@ _FONT_SCALE = 0.55
 _FONT_THICKNESS = 1
 
 
-def _build_frame_detections(tracks: list[TrackData]) -> dict[int, list[DetectionData]]:
-    """Group detections by frame position across all tracks."""
-    by_position: dict[int, list[DetectionData]] = defaultdict(list)
+def _build_frame_detections(
+    tracks: list[TrackData],
+) -> dict[int, list[tuple[DetectionData, float | None]]]:
+    """Group detections by frame position, carrying each track's match score."""
+    by_position: dict[int, list[tuple[DetectionData, float | None]]] = defaultdict(list)
     for track in tracks:
         for detection in track.detections:
-            by_position[detection.frame_position].append(detection)
+            by_position[detection.frame_position].append((detection, track.match_score))
     return dict(by_position)
 
 
-def _draw_detections(frame: np.ndarray, detections: list[DetectionData]) -> np.ndarray:
+def _draw_detections(frame: np.ndarray, detections: list[tuple[DetectionData, float | None]]) -> np.ndarray:
     """Draw bounding boxes and labels on a single frame (returns a copy)."""
     output = frame.copy()
     frame_height = frame.shape[0]
-    for det in detections:
+    for det, match_score in detections:
         b = det.bbox
         x1 = b.center_x - b.width // 2
         y1 = frame_height - (b.center_y + b.height // 2)
@@ -43,7 +45,7 @@ def _draw_detections(frame: np.ndarray, detections: list[DetectionData]) -> np.n
         color = _LABEL_COLORS.get(det.label, _DEFAULT_COLOR)
         cv2.rectangle(output, (x1, y1), (x2, y2), color, _BOX_THICKNESS)
 
-        label_text = f"{det.label} {det.confidence:.0%}"
+        label_text = f"match: {match_score:.0%}" if match_score is not None else f"{det.label} {det.confidence:.0%}"
         (text_w, text_h), baseline = cv2.getTextSize(label_text, _FONT, _FONT_SCALE, _FONT_THICKNESS)
         cv2.rectangle(output, (x1, y1 - text_h - baseline - 4), (x1 + text_w + 4, y1), color, -1)
         cv2.putText(

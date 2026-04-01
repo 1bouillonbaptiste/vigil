@@ -1,6 +1,6 @@
 from vigil.embedding.business_logic.gateways.embedded_track_repository import EmbeddedTrackRepository
 from vigil.embedding.business_logic.gateways.embedding_model import EmbeddingModel
-from vigil.embedding.business_logic.models.embedded_track import EmbeddedTrack
+from vigil.embedding.business_logic.models.track_match import TrackMatch
 from vigil.embedding.business_logic.services.embedding_matcher import EmbeddingMatcher
 
 
@@ -17,17 +17,19 @@ class FindSimilarTracksUseCase:
         self._model = model
         self._matcher = matcher
 
-    def execute(self, description: str, min_probability: float = 0.6) -> list[EmbeddedTrack]:
+    def execute(self, description: str, min_probability: float = 0.6) -> list[TrackMatch]:
         """Return tracks exceeding min_probability for the given description."""
         if not description:
-            return self._repository.list_tracks()
+            return [TrackMatch(id=track.id, score=1.0) for track in self._repository.list_tracks()]
+
         text_embedding = self._model.embed(description)
 
-        result: list[EmbeddedTrack] = []
+        result: list[TrackMatch] = []
         for track in self._repository.list_tracks():
             if not track.detections:
                 continue
             probs = [self._matcher.probability(det, text_embedding) for det in track.detections]
-            if sum(probs) / len(probs) >= min_probability:
-                result.append(track)
+            score = sum(probs) / len(probs)
+            if score >= min_probability:
+                result.append(TrackMatch(id=track.id, score=score))
         return result

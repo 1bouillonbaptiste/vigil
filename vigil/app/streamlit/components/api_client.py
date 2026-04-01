@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any
 
 import httpx
@@ -66,5 +67,9 @@ class VigilClient:
         if not description:
             return video_tracks
         response = self._request("GET", "/tracks/by-description", params={"description": description})
-        matching_ids: set[str] = {str(track_id) for track_id in response.json()["content"]["tracks"]}
-        return [track for track in video_tracks if track.id in matching_ids]
+        score_by_id: dict[str, float] = {m["id"]: m["score"] for m in response.json()["content"]["tracks"]}
+        return [
+            dataclasses.replace(track, match_score=score_by_id[track.id])
+            for track in video_tracks
+            if track.id in score_by_id
+        ]
