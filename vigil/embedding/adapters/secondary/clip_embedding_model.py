@@ -38,9 +38,18 @@ class ClipEmbeddingModel:
         normalized = features / features.norm(dim=-1, keepdim=True)
         return Embedding(tuple(float(x) for x in normalized.squeeze().cpu().numpy()))
 
+    @staticmethod
+    def _pad_to_square(image: PILImage.Image) -> PILImage.Image:
+        """Pad image to a square with black, centering the original content."""
+        w, h = image.size
+        side = max(w, h)
+        padded = PILImage.new("RGB", (side, side), (0, 0, 0))
+        padded.paste(image, ((side - w) // 2, (side - h) // 2))
+        return padded
+
     def embed_images(self, batch: list[Image]) -> list[Embedding]:
         """Return normalized CLIP image embeddings for a batch of crops."""
-        pil_images = [PILImage.fromarray(img.numpy()) for img in batch]
+        pil_images = [self._pad_to_square(PILImage.fromarray(img.numpy())) for img in batch]
         inputs = self._processor(images=pil_images, return_tensors="pt", padding=True)
         with torch.no_grad():
             features: torch.Tensor = self._model.get_image_features(**inputs)
